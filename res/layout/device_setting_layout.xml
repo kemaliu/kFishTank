@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal" >
+
+	<TextView
+	    android:id="@+id/setting_deviceName"
+	    android:layout_width="150px"
+	    android:layout_height="wrap_content"
+	    android:text=" 0:00"
+	    android:textStyle="bold"
+	    android:textColor="#0000FF" 
+	    android:clickable="true" />
+
+	 <TextView
+	     android:id="@+id/TextView_city"
+	     android:layout_width="wrap_content"
+	     android:layout_height="wrap_content"
+	     android:text="   belong to:" />
+
+	 <Spinner
+	     android:id="@+id/dev_belongto_spinner"
+	     android:layout_width="match_parent"
+	     android:layout_height="wrap_content" />
+    
+</LinearLayout>

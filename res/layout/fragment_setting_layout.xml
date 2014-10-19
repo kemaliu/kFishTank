@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>  
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content" 
+
+	    android:orientation="vertical"
+	    android:scrollbars="vertical" >
+	    
+    
+    <LinearLayout
+		    android:layout_width="fill_parent"
+		    android:layout_height="wrap_content"
+		    android:orientation="horizontal" >
+	
+		<TextView
+		    android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:text="tank number:"
+		    android:textStyle="bold" 
+		    android:textColor="#0000FF" 
+		    />
+		<Spinner
+		     android:id="@+id/tank_num_spinner"
+		     android:layout_width="100px"
+		     android:layout_height="wrap_content" />
+	</LinearLayout>
+	
+	<TextView
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content"
+	    android:text="devices list:"
+	    android:textStyle="bold" 
+	    android:textColor="#0000FF" 
+	    android:textSize="50dip" 
+    />
+
+
+
+	<RelativeLayout
+	    android:layout_width="wrap_content"
+	    android:layout_height="match_parent" >
+	    
+	    <Button
+	    android:id="@+id/setting_save_btn"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="save" />
+	<Button
+	    android:id="@+id/setting_restore_btn"
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:text="restore"
+	    android:layout_alignParentRight = "true"
+	    />
+	</RelativeLayout>
+
+
+	<ScrollView 
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent" >
+
+	
+	<LinearLayout  
+	    android:layout_width="match_parent"
+	    android:layout_height="wrap_content" 
+	    android:id="@+id/SettingTopLayout"
+	    android:orientation="vertical"
+	    android:scrollbars="vertical" >
+
+		    
+	</LinearLayout>
+	
+	
+	</ScrollView>
+
+
+</LinearLayout>
