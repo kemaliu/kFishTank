@@ -5,6 +5,8 @@ import android.view.View;
 import android.view.Window;
 
 public class kTankDevice {
+	static final int TANK_DEV_LED = 0;
+	static final int TANK_DEV_ONOFF = 1;
 	private int controllerNum;
 	private int ctrlType;
 	public String name;

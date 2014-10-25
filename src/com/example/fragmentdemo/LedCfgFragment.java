@@ -220,6 +220,8 @@ public class LedCfgFragment extends Fragment {
 		}
 		if(pageScroll != null)
 		  pageScroll.smoothScrollTo(0, pageScroll.getBaseline());
+		if(saveBtn != null)
+			saveBtn.setEnabled(false);
 	}
 	private kTankDevice ledDevice = null;
 	private kTankDevice.KTANKCTRL ledController = null;
@@ -237,8 +239,7 @@ public class LedCfgFragment extends Fragment {
 		System.arraycopy(ctrl.led.hour, 0, original_pwm_hour, 0, 24);
 		System.arraycopy(ctrl.led.hour, 0, current_pwm_hour, 0, 24);
 		updateViewFromCfg();
-		if(saveBtn != null)
-			saveBtn.setEnabled(false);
+
 	}
 	
 }

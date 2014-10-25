@@ -25,6 +25,9 @@ import android.graphics.Color;
  * @author guolin
  */
 public class MainActivity extends Activity implements OnClickListener {
+	/**
+	 * 在线的所有设备 
+	 */
 	public kTankDevice[] device = new kTankDevice[32];
 	public int tankNumber;
 	public int deviceNum;
@@ -339,10 +342,10 @@ public class MainActivity extends Activity implements OnClickListener {
 				if (tObj != null) {
 					device[i].tankId = Integer.parseInt(tObj.toString());
 				}
-				tObj = __param_map.get("devName" + i);
+				/*tObj = __param_map.get("devName" + i);
 				if (tObj != null) {
 					device[i].name = tObj.toString();
-				}
+				}*/
 			}
 
 		}

@@ -2,6 +2,7 @@ package com.example.fragmentdemo;
 
 import android.app.Fragment;
 import android.content.SharedPreferences.Editor;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -21,6 +22,7 @@ import android.widget.PopupWindow;
 import android.widget.Spinner;          
 import android.widget.Toast;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;  
 import java.util.List;  
 import java.util.Map;
@@ -49,7 +51,35 @@ public class SettingFragment extends Fragment {
                 if(v.getId() == R.id.dev_rename_ok_btn){
                     EditText et;
                     ((MainActivity)getActivity()).device[popupDevId].name = ((EditText)renameView.findViewById(R.id.dev_rename_edit)).getText().toString();
-                    ((TextView)deviceRow[popupDevId].findViewById(R.id.setting_deviceName)).setText(((EditText)renameView.findViewById(R.id.dev_rename_edit)).getText());
+                    String newName = ((EditText)renameView.findViewById(R.id.dev_rename_edit)).getText().toString();
+                    ((TextView)deviceRow[popupDevId].findViewById(R.id.setting_deviceName)).setText(newName);
+                    
+                    
+                    byte [] buf = new byte[24];
+                    byte [] namebuf;
+                    kTankDevice device = ((MainActivity)getActivity()).device[popupDevId];
+                    device.name = newName;
+                    try {
+                    	int len;
+                    	namebuf = device.name.getBytes("gb2312");
+                    	//获取namebuf字符串长度
+                    	for(len=0; len<24; len++){
+                    		if(namebuf[len] == 0)
+                    			break;
+                    	}
+                    	len++;
+                    	if(len > 23)
+                    		len = 23;
+                    	
+                    	System.arraycopy(namebuf, 0, buf, 0, len);
+                    	buf[len] = 0;
+    					((MainActivity)getActivity()).bt.remoteInfomationSave(device.devId, 0,
+    							KTANK_CMD.KFISH_CMD_SET_DEVICE_NAME, buf, 24);
+    				} catch (UnsupportedEncodingException e) {
+    					// TODO Auto-generated catch block
+    					e.printStackTrace();
+    				}
+                    
                     popupWindow.dismiss();
                 }else if(v.getId() == R.id.dev_rename_cancel_btn){
                     popupWindow.dismiss();
@@ -103,6 +133,7 @@ public class SettingFragment extends Fragment {
         }
     }
     private PopupWindow popupWindow;
+    /** 弹出窗口的设备ID*/
     private int popupDevId;
     private class DevRenameListen implements OnLongClickListener{
         @Override  
@@ -120,17 +151,18 @@ public class SettingFragment extends Fragment {
                 Toast.makeText(((MainActivity)getActivity()), "illegal device", Toast.LENGTH_SHORT).show(); 
             }else{
                 if(popupWindow == null){
-                    popupWindow = new PopupWindow(renameView, 300, 350);
+                    popupWindow = new PopupWindow(renameView, 400, 350);
                 }
                 popupDevId = foundId;
                 // 使其聚集
                 popupWindow.setFocusable(true);
                 // 设置允许在外点击消失
                 popupWindow.setOutsideTouchable(true);
-
+                kTankDevice device = ((MainActivity)getActivity()).device[popupDevId];
                 TextView tv = (TextView)renameView.findViewById(R.id.dev_rename_text);
-                tv.setText("rename device "+ ((MainActivity)getActivity()).device[popupDevId].name);
-                ((EditText)renameView.findViewById(R.id.dev_rename_edit)).setText(((MainActivity)getActivity()).device[popupDevId].name);
+                tv.setTextColor(Color.BLUE);
+                tv.setText("输入设备<"+ device.name + ">id" +device.devId+"的新名称\n最大11个中文字符/23英文字符)");
+                ((EditText)renameView.findViewById(R.id.dev_rename_edit)).setText(device.name);
                 popupWindow.showAtLocation(v,  Gravity.CENTER, 0, 0);
             }
             return true;
@@ -230,7 +262,7 @@ public class SettingFragment extends Fragment {
             }
         }
         //deviceListUpdate(((MainActivity)this.getActivity()).deviceNum, ((MainActivity)this.getActivity()).device);
-        renameView = inflater.inflate(R.layout.fragment_setting_device_rename, container, false);
+        renameView = inflater.inflate(R.layout.subwindow_rename_layout, container, false);
         ((Button)renameView.findViewById(R.id.dev_rename_ok_btn)).setOnClickListener(settingBtnOnClkLIsten);
         ((Button)renameView.findViewById(R.id.dev_rename_cancel_btn)).setOnClickListener(settingBtnOnClkLIsten);
         return settingLayout;

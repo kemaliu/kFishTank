@@ -3,6 +3,7 @@ package com.example.fragmentdemo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Calendar;
@@ -328,7 +329,13 @@ public class BLUETOOTH_CTRL {
 	for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
 	    if (24 == remoteInfomationRequest(device.devId, 0,
 					      KTANK_CMD.KFISH_CMD_GET_DEVICE_NAME, info, 24)) {
-		device.name = new String(info);
+
+		try {
+			device.name = new String(info, "gb2312");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		break;
 	    }
 	}

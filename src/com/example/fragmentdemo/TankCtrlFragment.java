@@ -26,7 +26,12 @@ public class TankCtrlFragment extends Fragment {
     
     private class CFG_BTN_LISTEN implements OnClickListener{
 	private kTankDevice.KTANKCTRL controller = null;
-	private kTankDevice  device = null;
+	private kTankDevice  device = null;、
+	/**
+	 * 监听配置页面中的按键事件
+	 * @param device 设备句柄
+	 * @param ctrl 控制器句柄
+	 * */
 	public CFG_BTN_LISTEN(kTankDevice device, kTankDevice.KTANKCTRL ctrl){
 	    controller = ctrl;
 	    this.device = device;
@@ -42,7 +47,7 @@ public class TankCtrlFragment extends Fragment {
 			((MainActivity)getActivity()).LEDCfgFragment.updateLEDCfg(device, controller, tankId);
 		}else{
 			((MainActivity)getActivity()).setTabSelection(5);
-			((MainActivity)getActivity()).SwitchCfgFragment.updateSwitchCfg(controller.swi.hour);
+			((MainActivity)getActivity()).SwitchCfgFragment.updateSwitchCfg(device, controller, tankId);
 		}
 	       
 	}
@@ -138,7 +143,10 @@ public class TankCtrlFragment extends Fragment {
     private int deviceNum;
     final int MAX_DEVICE_NUM = 8;
     private LinearLayout[] deviceLayout = new LinearLayout[MAX_DEVICE_NUM];
-    private LinearLayout[][] ctrlLayout = new LinearLayout[MAX_DEVICE_NUM][4];
+    
+    /** tank页面中， 每一个设备下面有2个LED控制器或4个开关控制器，共6个
+     * 0-1给LED用，2-5给开关用*/
+    private LinearLayout[][] ctrlLayout = new LinearLayout[MAX_DEVICE_NUM][6];
 
     public kTankDevice[] deviceList = new kTankDevice[MAX_DEVICE_NUM];
     LayoutInflater frag_inflater = null;
@@ -155,28 +163,42 @@ public class TankCtrlFragment extends Fragment {
                 return;
             }
         }
+        /*在tank页面中找一个没用的设备列表*/
         for (i = 0; i < MAX_DEVICE_NUM; i++) {
             if (deviceList[i] == null) {
                 deviceList[i] = device;
                 if (device.tankId != this.tankId)
                   return;
+                /*在页面中显示该列表*/
                 deviceLayout[i].setVisibility(View.VISIBLE);
                 TextView tv = (TextView) deviceLayout[i]
                               .findViewById(R.id.device_desc_text);
-                tv.setText(device.name + "(" + device.devId + ")");
-                for (j = 0; j < device.getCtrlNum(); j++) {
-                    tv = (TextView) ctrlLayout[i][j]
-                         .findViewById(R.id.ctrl_led_name);
-                    tv.setText(device.getCtrlName(j));
-                    ((SeekBar) ctrlLayout[i][j].findViewById(R.id.ctrl_led_bar))
-                      .setOnSeekBarChangeListener(new seekBarChangeListen(
-                                                      ctrlLayout[i][j]));
-                    ((EditText)ctrlLayout[i][j].findViewById(R.id.ctrl_led_pwm_value)).addTextChangedListener(new pwmEditWatcher(ctrlLayout[i][j]));
-                    ctrlLayout[i][j].setVisibility(View.VISIBLE);
-                    ;
-                    Button btn = (Button)ctrlLayout[i][j].findViewById(R.id.ctrl_led_cfg_btn);
-                    btn.setOnClickListener(new CFG_BTN_LISTEN(deviceList[i], deviceList[i].controller[j]));
-                }
+				tv.setText(device.name + "(" + device.devId + ")");
+				
+				for (j = 0; j < device.getCtrlNum(); j++) {
+					
+					if (device.controller[j].controllerType == kTankDevice.TANK_DEV_LED) {
+						LinearLayout layout =  ctrlLayout[i][j];
+						tv = (TextView) layout.findViewById(R.id.ctrl_led_name);
+						tv.setText(device.getCtrlName(j));
+						((SeekBar)layout.findViewById(R.id.ctrl_led_bar))
+								.setOnSeekBarChangeListener(new seekBarChangeListen(layout));
+						((EditText)layout.findViewById(R.id.ctrl_led_pwm_value))
+								.addTextChangedListener(new pwmEditWatcher(layout));
+						layout.setVisibility(View.VISIBLE);
+						Button btn = (Button) layout.findViewById(R.id.ctrl_led_cfg_btn);
+						btn.setOnClickListener(new CFG_BTN_LISTEN(
+								deviceList[i], deviceList[i].controller[j]));
+					} else if (device.controller[j].controllerType == kTankDevice.TANK_DEV_ONOFF) {
+						LinearLayout layout =  ctrlLayout[i][j + 2];
+						tv = (TextView)layout.findViewById(R.id.ctrl_led_name);
+						tv.setText(device.getCtrlName(j));
+						layout.setVisibility(View.VISIBLE);
+						Button btn = (Button)layout.findViewById(R.id.ctrl_led_cfg_btn);
+						btn.setOnClickListener(new CFG_BTN_LISTEN(
+								deviceList[i], deviceList[i].controller[j]));
+					}
+				}
                 break;
             }
         }
@@ -199,9 +221,14 @@ public class TankCtrlFragment extends Fragment {
             int j;
             deviceLayout[i] = (LinearLayout) inflater.inflate(
                 R.layout.fragment_tank_device_layout, container, false);
-            for (j = 0; j < 4; j++) {
-                ctrlLayout[i][j] = (LinearLayout) inflater.inflate(
-                    R.layout.fragment_tankk_led_cfg_layout, container, false);
+            for (j = 0; j < 6; j++) {
+            	if(j < 2){
+            		ctrlLayout[i][j] = (LinearLayout) inflater.inflate(
+            				R.layout.fragment_tank_led_cfg_layout, container, false);
+            	}else{
+            		ctrlLayout[i][j] = (LinearLayout) inflater.inflate(
+            				R.layout.fragment_tank_onoff_cfg_layout, container, false);
+            	}
                 deviceLayout[i].addView(ctrlLayout[i][j]);
                 ctrlLayout[i][j].setVisibility(View.GONE);
             }
