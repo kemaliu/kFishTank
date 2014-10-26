@@ -603,7 +603,13 @@ public class BLUETOOTH_CTRL {
 
 	int __cmdSeq = 0;
 
-	public int waitRead(byte[] buf, int waitLen, int timeoutMs) {
+    /**等待应答
+     * @param buf 接受数据的缓冲
+     * @param waitLen 等待的数据长度
+     * @param timeoutMs 等待的时间长度，单位ms.如果超时，返回读取的长度
+     * @return 获取的数据长度，如果CRC有错误，返回-1
+     */
+	public int waitACK(byte[] buf, int waitLen, int timeoutMs) {
 		long entry_time = System.currentTimeMillis();
 		int len, pos = 0, sync = 0;
 		byte[] rxBuf = new byte[64];
@@ -614,7 +620,7 @@ public class BLUETOOTH_CTRL {
 					continue;
 				if (sync == 1)
 					pos += inStream.read(rxBuf, pos,
-							((34 - pos) < len) ? (34 - pos) : len);
+							((35 - pos) < len) ? (35 - pos) : len);
 				else
 					pos += inStream.read(rxBuf, pos, 1);
 				if (sync == 0) {
@@ -636,11 +642,17 @@ public class BLUETOOTH_CTRL {
 					}
 				} else {
 					if (pos >= waitLen) {
+						byte crc = 0;
 						int i;
-						for (i = 0; i < waitLen - 2; i++) {
-							buf[i] = rxBuf[i + 2];
+						for(i=3; i<waitLen; i++)
+							crc += rxBuf[i];
+						if(crc == rxBuf[2]){
+							System.arraycopy(rxBuf, 3, buf, 0, waitLen - 3);
+							return waitLen - 3;
+						}else{
+							return -1;
 						}
-						break;
+								
 					}
 				}
 			} while (System.currentTimeMillis() - entry_time < (long) timeoutMs);
@@ -649,32 +661,37 @@ public class BLUETOOTH_CTRL {
 			e.printStackTrace();
 			return -1;
 		}
-		return pos - 2;
+		return pos - 3;
 	}
 
 	public int remoteInfomationRequest(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
-		byte[] cmd = new byte[10];
+		byte[] cmd = new byte[20];
 		byte[] rxBuf = new byte[64];
+		int i;
 		int cmdLen, rxLen;
 		cmd[0] = (byte) 0xfe;
 		cmd[1] = (byte) 0x1c;
-		cmd[2] = 0;// src id ,ignore
-		cmd[3] = (byte) devId;// dest id, deviceId
-		cmd[4] = 0;// rfPlane, ignore
-		cmd[5] = 0;// rfChan, ignore
-		cmd[6] = (byte) cmdType;// cmd
-		cmd[7] = (byte) devId;// devId
-		cmd[8] = (byte) ctrlId;// ctrlId
-		cmd[9] = 0;// seq, ignore
-		cmdLen = 10;
+		
+		cmd[3] = 0;// src id ,ignore
+		cmd[4] = (byte) devId;// dest id, deviceId
+		cmd[5] = 0;// rfPlane, ignore
+		cmd[6] = 0;// rfChan, ignore
+		cmd[7] = (byte) cmdType;// cmd
+		cmd[8] = (byte) devId;// devId
+		cmd[9] = (byte) ctrlId;// ctrlId
+		cmd[10] = 0;// seq, ignore
+		//CRC
+		cmd[2] = 0;
+		for(i=3; i<11; i++)
+			cmd[2] += cmd[i];
+		cmdLen = 11;
 		try {
 			outStream.flush();
 			inStream.skip(inStream.available());
 			outStream.write(cmd, 0, cmdLen);
-			rxLen = waitRead(rxBuf, 34, 1000);
+			rxLen = waitACK(rxBuf, 35, 500);
 			if (rxLen >= 32) {
-				int i;
 				for (i = 0; i < 24; i++)
 					buf[i] = rxBuf[8 + i];
 				return 24;
@@ -689,25 +706,33 @@ public class BLUETOOTH_CTRL {
 
 	public int remoteInfomationSave(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
-		byte[] cmd = new byte[34];
+		int i;
+		byte[] cmd = new byte[40];
 		byte[] rxBuf = new byte[64];
 		int cmdLen, rxLen;
 		cmd[0] = (byte) 0xfe;
 		cmd[1] = (byte) 0x1c;
-		cmd[2] = 0;// src id ,ignore
-		cmd[3] = (byte) devId;// dest id, deviceId
-		cmd[4] = 0;// rfPlane, ignore
-		cmd[5] = 0;// rfChan, ignore
-		cmd[6] = (byte) cmdType;// cmd
-		cmd[7] = (byte) devId;// devId
-		cmd[8] = (byte) ctrlId;// ctrlId
-		cmd[9] = 0;// seq, ignore
+		//Command
+		cmd[3] = 0;// src id ,ignore
+		cmd[4] = (byte) devId;// dest id, deviceId
+		cmd[5] = 0;// rfPlane, ignore
+		cmd[6] = 0;// rfChan, ignore
+		cmd[7] = (byte) cmdType;// cmd
+		cmd[8] = (byte) devId;// devId
+		cmd[9] = (byte) ctrlId;// ctrlId
+		cmd[10] = 0;// seq, ignore
+		
+
 		// fill data
-		System.arraycopy(buf, 0, cmd, 10, 24);
-		cmdLen = 34;
+		System.arraycopy(buf, 0, cmd, 11, 24);
+		//CRC
+		cmd[2] = 0;
+		for(i=3; i<35; i++)
+			cmd[2] += cmd[i];
+		cmdLen = 35;
 		try {
 			outStream.write(cmd, 0, cmdLen);
-			rxLen = waitRead(rxBuf, 34, 1000);
+			rxLen = waitACK(rxBuf, 35, 500);
 
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -715,7 +740,6 @@ public class BLUETOOTH_CTRL {
 			return -1;
 		}
 		if (rxLen >= 32) {
-			int i;
 			for (i = 0; i < 24; i++)
 				buf[i] = rxBuf[8 + i];
 		}

@@ -176,7 +176,7 @@ public class SwitchCfgFragment extends Fragment {
 		for (i = 0; i < 24; i++) {
 			if (hourButton[i] == null)
 				continue;
-			hourButton[i].setChecked(switch_orginal_state[0] == 0 ? false : true);
+			hourButton[i].setChecked(switch_orginal_state[i] == 0 ? false : true);
 
 		}
 		

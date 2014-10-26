@@ -51,6 +51,7 @@ public class KTANK_CMD {
 	final static int KFISH_CMD_SET_CTRL_INFO = 0x62;
 	final static int KFISH_CMD_SET_CTRL_NAME = 0x63;
 	final static int KFISH_CMD_SET_CTRL_CFG = 0x64;
+	final static int KFISH_CMD_DEV_PAUSE = 0x65;
 
 	final static int KFISH_CMD_GET_DEVICES_INFO = 0x80;
 	final static int KFISH_CMD_GET_DEVICE_NAME = 0x81;

@@ -21,6 +21,7 @@ import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -44,6 +45,7 @@ public class TankCtrlFragment extends Fragment {
     private LinearLayout[][] ctrlLayout = new LinearLayout[MAX_DEVICE_NUM][6];
     /**与ctrlLayout对应的控制器句柄*/
     kTankDevice.KTANKCTRL[][] ctrlLists = new kTankDevice.KTANKCTRL[MAX_DEVICE_NUM][6];
+    int [][] pause_value_list = new int[MAX_DEVICE_NUM][6];
     
     tankButtonClickListener tankBtnClickListen = new tankButtonClickListener();
     /** tank页面按键监听 */
@@ -51,15 +53,66 @@ public class TankCtrlFragment extends Fragment {
         @Override
           public void onClick(View v) {
             switch (v.getId()) {
-              case R.id.tankPauseBtn:
+              case R.id.tankPauseBtn://暂停按钮
             	  if(pause_resume_btn_state == 0){
             		  pause_resume_btn_state = 1;
             		  pause_resume_btn.setText("恢复");
             		  /*暂停*/
+            		  int i, j;
+            		  byte [] buf = new byte[24];
+            		  int pauseMin = Integer.parseInt(((EditText)tankBaseLayout.findViewById(R.id.tank_pause_min)).getText().toString());
+                	  for(i=0; i<MAX_DEVICE_NUM; i++){
+                		  kTankDevice device = deviceList[i];
+                		  kTankDevice.KTANKCTRL ctrl;
+                		  if(device == null)
+                			  continue;
+                		  
+                		  
+                		  for(j=0; j<24; j++)
+                			  buf[j] = 0;
+                		  
+                		  buf[0] = (byte)pauseMin;
+                		  //获取配置的暂停的数值
+                		  for(j=0; j<6; j++){
+                			  if(ctrlLists[i][j] == null)
+                				  continue;
+                			  ctrl = ctrlLists[i][j];
+                			  if(ctrl.controllerType == kTankDevice.TANK_DEV_LED){
+                				  buf[1 + j] = (byte)pause_value_list[i][j]; 
+                			  }else if(ctrl.controllerType == kTankDevice.TANK_DEV_ONOFF){
+                				  buf[1 + j - 2] = (byte)pause_value_list[i][j]; 
+                			  }else{
+                				  
+                			  }
+                		  }
+                		  for(j=0; j<3; j++){
+                			  if(24 == ((MainActivity) getActivity()).bt.remoteInfomationSave(device.devId, 
+                				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24))
+                				  break;
+                		  }
+                	  }
             	  }else{
             		  pause_resume_btn_state = 0;
             		  pause_resume_btn.setText("暂停");
+            		  byte [] buf = new byte[24];
+            		  int i, j;
+            		  int pauseMin = Integer.parseInt(((EditText)tankBaseLayout.findViewById(R.id.tank_pause_min)).getText().toString());
+                	  for(i=0; i<MAX_DEVICE_NUM; i++){
+                		  kTankDevice device = deviceList[i];
+                		  kTankDevice.KTANKCTRL ctrl;
+                		  if(device == null)
+                			  continue;
+                		  for(j=0; j<24; j++)
+                			  buf[j] = 0;
+                		  for(j=0; j<3; j++){
+                			  if(24 == ((MainActivity) getActivity()).bt.remoteInfomationSave(device.devId, 
+                				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24))
+                				  break;
+                		  }
+                		  
+                	  }
             	  }
+            	  
                 break;
               default:
                 if (renameView == null) {
@@ -142,16 +195,39 @@ public class TankCtrlFragment extends Fragment {
             if (controller == null) {
                 return;
             }
-            if (controller.controllerType == 0) {// led
-                ((MainActivity) getActivity()).setTabSelection(4);
-                ((MainActivity) getActivity()).LEDCfgFragment.updateLEDCfg(
-                    device, controller, tankId);
-            } else {
-                ((MainActivity) getActivity()).setTabSelection(5);
-                ((MainActivity) getActivity()).SwitchCfgFragment
-                  .updateSwitchCfg(device, controller, tankId);
+            switch(arg0.getId()){
+            	case R.id.ctrl_led_cfg_btn:
+	            if (controller.controllerType == 0) {// led
+	                ((MainActivity) getActivity()).setTabSelection(4);
+	                ((MainActivity) getActivity()).LEDCfgFragment.updateLEDCfg(
+	                    device, controller, tankId);
+	            } else {
+	                ((MainActivity) getActivity()).setTabSelection(5);
+	                ((MainActivity) getActivity()).SwitchCfgFragment
+	                  .updateSwitchCfg(device, controller, tankId);
+	            }
+            case R.id.ctrl_onoff_btn:
+            	//this btn for switch row only
+            	int i = 0, j = 0, found = 0;
+            	for(i=0; i<MAX_DEVICE_NUM; i++){
+            		for(j=0; j<6; j++){
+            			if(ctrlLists[i][j] == null)
+            				continue;
+            			if(ctrlLists[i][j] == controller){
+            				found = 1;
+            				break;
+            			}
+            		}
+            		if(found != 0)
+            			break;
+            	}
+            	
+            	if(found == 0){
+            		return;
+            	}
+            	pause_value_list[i][j] =  ((ToggleButton)arg0).isChecked() == true?1:0;
+            	break;
             }
-
         }
 
     }
@@ -160,9 +236,13 @@ public class TankCtrlFragment extends Fragment {
                                       SeekBar.OnSeekBarChangeListener {
 
         private LinearLayout parentLayout;
+        private int devIndex;
+        private int ctrlIndex;
 
-        public seekBarChangeListen(LinearLayout ctrlLayout) {
+        public seekBarChangeListen(LinearLayout ctrlLayout, int devId, int ctrlId) {
             parentLayout = ctrlLayout;
+            devIndex = devId;
+            ctrlIndex = ctrlId;
         }
 
         /**
@@ -188,19 +268,23 @@ public class TankCtrlFragment extends Fragment {
           public void onProgressChanged(SeekBar seekBar, int progress,
                                         boolean fromUser) {
             if (move == 1) {
-                int i, j;
                 EditText et = (EditText) parentLayout
                               .findViewById(R.id.ctrl_led_pwm_value);
                 et.setText("" + progress);
+                pause_value_list[devIndex][ctrlIndex] = (byte)progress;
             }
         }
     }
 
     private class pwmEditWatcher implements TextWatcher {
         private LinearLayout parentLayout;
+        private int devIndex;
+        private int ctrlIndex;
 
-        public pwmEditWatcher(LinearLayout base_layout) {
+        public pwmEditWatcher(LinearLayout base_layout, int devId, int ctrlId) {
             parentLayout = base_layout;
+            devIndex = devId;
+            ctrlIndex = ctrlId;
         }
 
         public void afterTextChanged(Editable s) {
@@ -225,6 +309,7 @@ public class TankCtrlFragment extends Fragment {
                 } else {
                 }
                 bar.setProgress(value);
+                pause_value_list[devIndex][ctrlIndex] = (byte)value;
                 if (mod != 0) {
                     EditText et = ((EditText) parentLayout
                                    .findViewById(R.id.ctrl_led_pwm_value));
@@ -291,16 +376,17 @@ public class TankCtrlFragment extends Fragment {
                         SeekBar bar = ((SeekBar) layout.findViewById(R.id.ctrl_led_bar));
                         //((SeekBar) layout.findViewById(R.id.ctrl_led_bar))
                           bar.setOnSeekBarChangeListener(new seekBarChangeListen(
-                                                          layout));
+                                                          layout, i, j));
                         ((EditText) layout
                          .findViewById(R.id.ctrl_led_pwm_value))
                           .addTextChangedListener(new pwmEditWatcher(
-                                                      layout));
+                                                      layout, i, j));
                         layout.setVisibility(View.VISIBLE);
                         Button btn = (Button) layout
                                      .findViewById(R.id.ctrl_led_cfg_btn);
                         btn.setOnClickListener(new CFG_BTN_LISTEN(
                                                    deviceList[i], deviceList[i].controller[j]));
+                        
                     } else/* if (device.controller[j].controllerType == kTankDevice.TANK_DEV_ONOFF) */{
                         LinearLayout layout = ctrlLayout[i][j + 2];
                         ctrlLists[i][j + 2] = device.controller[j];
@@ -310,9 +396,12 @@ public class TankCtrlFragment extends Fragment {
                         layout.setVisibility(View.VISIBLE);
                         Button btn = (Button) layout
                                      .findViewById(R.id.ctrl_led_cfg_btn);
-                        btn.setOnClickListener(new CFG_BTN_LISTEN(
-                                                   deviceList[i], deviceList[i].controller[j]));
-                    }
+                        CFG_BTN_LISTEN listen = new CFG_BTN_LISTEN(deviceList[i], deviceList[i].controller[j]);
+                        btn.setOnClickListener(listen);
+                        btn = (Button) layout
+                                .findViewById(R.id.ctrl_onoff_btn);
+                        btn.setOnClickListener(listen);
+                    	}
                 }
                 break;
             }
