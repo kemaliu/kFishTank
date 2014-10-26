@@ -103,6 +103,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	final int BT_STATE_READY = 0x1010;
 
 	final int BT_STATE_LOG = 0x4000;
+	final int BT_STATE_LOG_RAW = 0x4001;
 
 
 	final int BT_FATAL_ERROR = 0x8005;
@@ -110,6 +111,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	public Handler msgHandler = new Handler() {
 		public void handleMessage(Message msg) {
+			Bundle bd;
 			TextView tv = (TextView) (View) (getWindow().getDecorView())
 					.findViewById(R.id.start_layout_text);
 			switch (msg.what) {
@@ -121,9 +123,14 @@ public class MainActivity extends Activity implements OnClickListener {
 				startMainWindow();
 				break;
 			case BT_STATE_LOG:// TestHandler是Activity的类名
-				Bundle bd = msg.getData();
+				bd = msg.getData();
 				bd.getString("t0");
 				tv.append("\n" + bd.getString("t0"));
+				break;
+			case BT_STATE_LOG_RAW:// TestHandler是Activity的类名
+				bd = msg.getData();
+				bd.getString("t0");
+				tv.append(bd.getString("t0"));
 				break;
 			case BT_STATE_FORCE_QUIT:
 				finish();

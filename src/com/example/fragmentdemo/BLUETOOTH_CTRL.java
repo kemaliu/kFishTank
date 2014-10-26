@@ -6,7 +6,6 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Calendar;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
@@ -26,14 +25,6 @@ import com.example.fragmentdemo.BLUETOOTH_CTRL;
 import com.example.fragmentdemo.KTANK_CMD;
 import com.example.fragmentdemo.kTankDevice;
 import com.example.fragmentdemo.kTankDevice.KTANKCTRL;
-
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 
 public class BLUETOOTH_CTRL {
 	Handler msgHandler;
@@ -230,8 +221,8 @@ public class BLUETOOTH_CTRL {
 			cnt++;
 		}
 		if (btAdapt.isEnabled() == false) {
-		    notifyActivity(mainActivity.BT_STATE_LOG, "打开蓝牙fail");
-		    notifyActivity(mainActivity.BT_FATAL_ERROR);
+			notifyActivity(mainActivity.BT_STATE_LOG, "打开蓝牙fail");
+			notifyActivity(mainActivity.BT_FATAL_ERROR);
 			return;
 		}
 		// 注册Receiver来获取蓝牙设备相关的结果
@@ -245,8 +236,8 @@ public class BLUETOOTH_CTRL {
 		mainActivity.registerReceiver(searchDevices, intent);
 
 		if (btAdapt.getState() == BluetoothAdapter.STATE_OFF) {// 如果蓝牙还没开启
-		    notifyActivity(mainActivity.BT_STATE_LOG, "请先打开蓝牙");
-		    return;
+			notifyActivity(mainActivity.BT_STATE_LOG, "请先打开蓝牙");
+			return;
 		}
 		if (btAdapt.isDiscovering())
 			btAdapt.cancelDiscovery();
@@ -269,9 +260,9 @@ public class BLUETOOTH_CTRL {
 		}
 		if (findMark == 0 || device == null) {
 			// found none, report error
-		    notifyActivity(mainActivity.BT_STATE_LOG, "connect kfish device fail");
-		    notifyActivity(mainActivity.BT_FATAL_ERROR);
-		    
+			notifyActivity(mainActivity.BT_STATE_LOG, "蓝牙连接KFISH失败");
+			notifyActivity(mainActivity.BT_FATAL_ERROR);
+
 			// this.setTitle("discovering");
 			// ((MainActivity)getActivity()).Toast.makeText(this,
 			// "discover ",Toast.LENGTH_SHORT).show();
@@ -281,8 +272,7 @@ public class BLUETOOTH_CTRL {
 
 		// try connect
 		if (0 != connect(device)) {
-		    notifyActivity(mainActivity.BT_STATE_LOG,
-					"app will exit in 3 second");
+			notifyActivity(mainActivity.BT_STATE_LOG, "程序将会在三秒内退出");
 			try {
 				Thread.sleep(3000);
 			} catch (InterruptedException e) {
@@ -292,17 +282,17 @@ public class BLUETOOTH_CTRL {
 			notifyActivity(mainActivity.BT_STATE_FORCE_QUIT);
 			return;
 		}
-		notifyActivity(mainActivity.BT_STATE_LOG, "try get devices infomation...");
+		notifyActivity(mainActivity.BT_STATE_LOG, "获取设备列表...");
 
 		if (0 != kTankGetDevicesInfo()) {
-		    notifyActivity(mainActivity.BT_STATE_LOG, "get devices list failed");
-		    notifyActivity(mainActivity.BT_FATAL_ERROR);
-		    return;
+			notifyActivity(mainActivity.BT_STATE_LOG_RAW, "失败!!!!");
+			notifyActivity(mainActivity.BT_FATAL_ERROR);
+			return;
 		}
-		notifyActivity(mainActivity.BT_STATE_LOG,
-				"get devices infomation done :)");
+		notifyActivity(mainActivity.BT_STATE_LOG, "设备数:"
+				+ mainActivity.deviceNum + " :)");
 		try {
-			Thread.sleep(3000);
+			Thread.sleep(1000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -322,113 +312,133 @@ public class BLUETOOTH_CTRL {
 
 	final int MAX_RETRY_NUMBER = 3;
 
-    private int kTankGetDevInfo(kTankDevice device) {
-	int ctrl_i, retry;
-	byte[] info = new byte[24];
-	// get device name
-	for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
-	    if (24 == remoteInfomationRequest(device.devId, 0,
-					      KTANK_CMD.KFISH_CMD_GET_DEVICE_NAME, info, 24)) {
+	private int kTankGetDevInfo(kTankDevice device) {
+		int ctrl_i, retry;
+		byte[] info = new byte[24];
+		// get device name
+		for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
+			if (24 == remoteInfomationRequest(device.devId, 0,
+					KTANK_CMD.KFISH_CMD_GET_DEVICE_NAME, info, 24)) {
 
-		try {
-			device.name = new String(info, "gb2312");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+				try {
+					int byteLen = 0;
+					while (info[byteLen] != 0) {
+						byteLen++;
+					}
+					device.name = new String(info, 0, byteLen, "gb2312");
+				} catch (UnsupportedEncodingException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				break;
+			}
 		}
-		break;
-	    }
-	}
-	if (retry >= MAX_RETRY_NUMBER){
-	    return -1;
-	}
-	// get every controller's info
-	for (ctrl_i = 0; ctrl_i < device.getCtrlNum(); ctrl_i++) {
-	    KTANKCTRL ctrl = null;
-	    // get controller base info
-	    for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
-		if (24 == remoteInfomationRequest(device.devId, ctrl_i,
-						  KTANK_CMD.KFISH_CMD_GET_CTRL_INFO, info, 24)) {
-		    ctrl = device.new KTANKCTRL(info);
-		    device.controller[ctrl_i] = ctrl;
-		    break;
+		if (retry >= MAX_RETRY_NUMBER) {
+			return -1;
 		}
-	    }
-	    if (retry >= MAX_RETRY_NUMBER){
-		return -1;
-	    }
-	    if (ctrl == null) {
-		String str = "get" + device.devId + "controller " + ctrl_i
-			     + "infomation failed";
-		notifyActivity(mainActivity.BT_STATE_LOG, str);
-		continue;
-	    }
-	    // get controller name
-	    for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
-		if (24 == remoteInfomationRequest(device.devId, ctrl_i,
-						  KTANK_CMD.KFISH_CMD_GET_CTRL_NAME, info, 24)) {
-		    ctrl.name = new String(info);
-		    break;
-		}
-	    }
-	    if (retry >= MAX_RETRY_NUMBER){
-		return -1;
-	    }
-	    // get controller's cfg
-	    for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
-		if (24 == remoteInfomationRequest(device.devId, ctrl_i,
-						  KTANK_CMD.KFISH_CMD_GET_CTRL_CFG, info, 24)) {
-		    ctrl.updateLocalCfg(info);
-		    break;
-		}
-	    }
-	    if (retry >= MAX_RETRY_NUMBER){
-		return -1;
-	    }
+		// get every controller's info
+		for (ctrl_i = 0; ctrl_i < device.getCtrlNum(); ctrl_i++) {
+			notifyActivity(mainActivity.BT_STATE_LOG, "控制器" + ctrl_i);
+			KTANKCTRL ctrl = null;
+			// get controller base info
+			for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
+				if (24 == remoteInfomationRequest(device.devId, ctrl_i,
+						KTANK_CMD.KFISH_CMD_GET_CTRL_INFO, info, 24)) {
+					ctrl = device.new KTANKCTRL(info);
+					device.controller[ctrl_i] = ctrl;
+					break;
+				}
+			}
+			if (retry >= MAX_RETRY_NUMBER) {
+				return -1;
+			}
+			if (ctrl == null) {
+				String str = "获取设备ID(" + device.devId + ")控制器 " + ctrl_i
+						+ "信息失败";
+				notifyActivity(mainActivity.BT_STATE_LOG, str);
+				continue;
+			} else {
+				notifyActivity(mainActivity.BT_STATE_LOG_RAW,
+						" 类型:" + ctrl.ctrlTypeName());
+			}
+			// get controller name
+			for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
+				if (24 == remoteInfomationRequest(device.devId, ctrl_i,
+						KTANK_CMD.KFISH_CMD_GET_CTRL_NAME, info, 24)) {
+					try {
+						int byteLen = 0;
+						while (info[byteLen] != 0) {
+							byteLen++;
+						}
+						ctrl.name = new String(info, 0, byteLen, "gb2312");
+						notifyActivity(mainActivity.BT_STATE_LOG_RAW, " 名:"
+								+ ctrl.name);
+					} catch (UnsupportedEncodingException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					break;
+				}
+			}
+			if (retry >= MAX_RETRY_NUMBER) {
+				return -1;
+			}
+			// get controller's cfg
+			for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
+				if (24 == remoteInfomationRequest(device.devId, ctrl_i,
+						KTANK_CMD.KFISH_CMD_GET_CTRL_CFG, info, 24)) {
+					ctrl.updateLocalCfg(info);
+					break;
+				}
+			}
+			if (retry >= MAX_RETRY_NUMBER) {
+				return -1;
+			}
 
+		}
+		return 0;
 	}
-	return 0;
-    }
 
 	private int kTankGetDevicesInfo() {
 		int retry, ret = 0, i;
 		byte[] info = new byte[24];
 		// get device lists
 		for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
-		    ret = remoteInfomationRequest(0xff, 0,
-						  KTANK_CMD.KFISH_CMD_GET_DEVICES_INFO, info, 24);
-		    if(ret == 24){
-			break;
-		    }
-			
+			ret = remoteInfomationRequest(0xff, 0,
+					KTANK_CMD.KFISH_CMD_GET_DEVICES_INFO, info, 24);
+			if (ret == 24) {
+				break;
+			}
+
 		}
 		if (retry >= MAX_RETRY_NUMBER) {
-		    notifyActivity(mainActivity.BT_STATE_LOG, "get device all retry failed");
-		    return -1;
+			notifyActivity(mainActivity.BT_STATE_LOG, "重试超时");
+			return -1;
 		}
-		if(ret != 24){
-		    notifyActivity(mainActivity.BT_STATE_LOG, "device list length illegal");
-		    return -1;				
+		if (ret != 24) {
+			notifyActivity(mainActivity.BT_STATE_LOG, "设备列表长度非法");
+			return -1;
 		}
 		if (ret == 24) {
-		    for (i = 0; i < 24; i++) {
-			if (info[i] == 0) {
-			    continue;
+			for (i = 0; i < 24; i++) {
+				if (info[i] == 0) {
+					continue;
+				}
+				notifyActivity(mainActivity.BT_STATE_LOG, "读取设备ID:" + i
+						+ " 详细信息");
+				kTankDevice device = new kTankDevice(info[i]);
+				device.devId = i;
+				if (0 == kTankGetDevInfo(device)) {
+					/*获取设备信息成功，添加到设备列表*/
+					mainActivity.device[mainActivity.deviceNum] = device;
+					mainActivity.deviceNum++;
+					notifyActivity(mainActivity.BT_STATE_LOG, "设备名<"
+							+ device.name + ">");
+				} else {
+					notifyActivity(mainActivity.BT_STATE_LOG, "获取设备ID(" + i
+							+ ")信息失败");
+				}
 			}
-			notifyActivity(mainActivity.BT_STATE_LOG, "try get device"
-				       + i + " information");
-			kTankDevice device = new kTankDevice(info[i]);
-			device.devId = i;
-			if(0 == kTankGetDevInfo(device)){
-			    mainActivity.device[mainActivity.deviceNum] = device;
-			    mainActivity.deviceNum++;
-			    notifyActivity(mainActivity.BT_STATE_LOG,
-					   "found " + device.name);
-			}else{
-			    notifyActivity(mainActivity.BT_STATE_LOG,
-					   "get device " + i + " infomation failed ");
-			}
-		    }
 		}
 		return 0;
 	}
@@ -558,8 +568,8 @@ public class BLUETOOTH_CTRL {
 		// this.setTitle("connection");
 		retry = 0;
 		while (retry++ < 5) {
-		    notifyActivity(mainActivity.BT_STATE_LOG,
-				   "try connect device " + btDev.getName());
+			notifyActivity(mainActivity.BT_STATE_LOG, "try connect device "
+					+ btDev.getName());
 			try {
 				btSocket = btDev.createRfcommSocketToServiceRecord(uuid);
 				Log.d("BlueToothTestActivity", "开始连接...");
@@ -659,13 +669,15 @@ public class BLUETOOTH_CTRL {
 		cmd[9] = 0;// seq, ignore
 		cmdLen = 10;
 		try {
+			outStream.flush();
+			inStream.skip(inStream.available());
 			outStream.write(cmd, 0, cmdLen);
 			rxLen = waitRead(rxBuf, 34, 1000);
 			if (rxLen >= 32) {
-			    int i;
-			    for (i = 0; i < 24; i++)
-			      buf[i] = rxBuf[8 + i];
-			    return 24;
+				int i;
+				for (i = 0; i < 24; i++)
+					buf[i] = rxBuf[8 + i];
+				return 24;
 			}
 			return 0;
 		} catch (IOException e) {

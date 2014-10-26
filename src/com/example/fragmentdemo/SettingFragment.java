@@ -61,18 +61,13 @@ public class SettingFragment extends Fragment {
                     device.name = newName;
                     try {
                     	int len;
-                    	namebuf = device.name.getBytes("gb2312");
-                    	//获取namebuf字符串长度
-                    	for(len=0; len<24; len++){
-                    		if(namebuf[len] == 0)
-                    			break;
-                    	}
-                    	len++;
-                    	if(len > 23)
-                    		len = 23;
-                    	
-                    	System.arraycopy(namebuf, 0, buf, 0, len);
-                    	buf[len] = 0;
+                        namebuf = device.name.getBytes("gb2312");
+                        // 获取namebuf字符串长度
+                        for (len = 0; len < 24; len++) {
+                            if (buf[len] == 0)
+                              break;
+                        }
+                        System.arraycopy(namebuf, 0, buf, 0, namebuf.length>23?23:namebuf.length);
     					((MainActivity)getActivity()).bt.remoteInfomationSave(device.devId, 0,
     							KTANK_CMD.KFISH_CMD_SET_DEVICE_NAME, buf, 24);
     				} catch (UnsupportedEncodingException e) {

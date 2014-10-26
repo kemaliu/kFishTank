@@ -31,11 +31,22 @@ public class kTankDevice {
 			int fanPwm;
 		}
 
+		
+		public String ctrlTypeName(){
+			if(this.controllerType == TANK_DEV_LED)
+				return "LED".toString();
+			else if(this.controllerType == TANK_DEV_ONOFF)
+				return "开关".toString();
+			else
+				return "unknown".toString();
+		}
+		
 		int controllerType;
 		KTANKCTRL_SWITCH swi = null;
 		KTANKCTRL_LED led = null;
 		String name;
 
+		
 		public KTANKCTRL(byte[] info) {
 
 			controllerType = info[0];
