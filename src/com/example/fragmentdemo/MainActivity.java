@@ -272,7 +272,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 			break;
 		case 5: // switch cfg
-			if (LEDCfgFragment == null) {
+			if (SwitchCfgFragment == null) {
 				SwitchCfgFragment = new SwitchCfgFragment();
 				transaction.add(R.id.content, SwitchCfgFragment);
 			} else {

@@ -28,7 +28,7 @@ import com.example.fragmentdemo.kTankDevice.KTANKCTRL;
 
 public class BLUETOOTH_CTRL {
 	Handler msgHandler;
-
+	private Object bt_sem_obj = new Object();
 	private void notifyActivity(int state) {
 		Message m = new Message();
 		m.what = state;
@@ -299,13 +299,29 @@ public class BLUETOOTH_CTRL {
 		}
 		notifyActivity(mainActivity.BT_STATE_READY);
 
-		/*
-		 * while(!Thread.interrupted()){ byte[]buf = new byte[100]; try {
-		 * Thread.sleep(1000); } catch (InterruptedException e) { // TODO
-		 * Auto-generated catch block e.printStackTrace(); }
-		 * remoteInfomationRequest(0, 0, 0x80, buf, 100); } Log.d("kTANK",
-		 * "thread quit");
-		 */
+		
+		/*while (!Thread.interrupted()) {
+			byte[] buf = new byte[100];
+			try {
+				Thread.sleep(1000);
+				int retry;
+				for (retry = 0; retry < 3; retry++) {
+					if (24 == remoteInfomationRequest(0xff, 0,
+									KTANK_CMD.KFISH_CMD_GET_DEV_TIME, buf, 24)) {
+						if(mainActivity.settingFragment != null){
+							mainActivity.settingFragment.dev_time_update(buf[4], buf[5], buf[6]);
+						}
+						break;
+					}
+				}
+				
+				
+			} catch (InterruptedException e) { // TODO
+				
+			}
+		}*/
+		Log.d("kTANK", "thread quit");
+		
 		return;
 
 	}
@@ -666,6 +682,7 @@ public class BLUETOOTH_CTRL {
 
 	public int remoteInfomationRequest(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
+		synchronized(bt_sem_obj){
 		byte[] cmd = new byte[20];
 		byte[] rxBuf = new byte[64];
 		int i;
@@ -702,10 +719,12 @@ public class BLUETOOTH_CTRL {
 			e.printStackTrace();
 			return -1;
 		}
+		}
 	}
 
 	public int remoteInfomationSave(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
+		synchronized(bt_sem_obj){
 		int i;
 		byte[] cmd = new byte[40];
 		byte[] rxBuf = new byte[64];
@@ -745,5 +764,5 @@ public class BLUETOOTH_CTRL {
 		}
 		return 24;
 	}
-
+	}
 }

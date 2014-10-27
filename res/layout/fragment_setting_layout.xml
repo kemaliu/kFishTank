@@ -25,6 +25,37 @@
 		     android:layout_height="wrap_content" />
 	</LinearLayout>
 	
+            <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" 
+            android:focusableInTouchMode="true" >
+
+            
+
+            <EditText
+                android:id="@+id/time_edit_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:inputType="time"  />
+            <Button
+                android:id="@+id/time_get_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="获取时间" />
+			<Button
+                android:id="@+id/time_set_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="设置时间" />
+			
+        </LinearLayout>
+    
+    
+    
+    
 	<TextView
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"

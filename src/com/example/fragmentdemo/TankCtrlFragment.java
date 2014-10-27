@@ -206,6 +206,7 @@ public class TankCtrlFragment extends Fragment {
 	                ((MainActivity) getActivity()).SwitchCfgFragment
 	                  .updateSwitchCfg(device, controller, tankId);
 	            }
+	            break;
             case R.id.ctrl_onoff_btn:
             	//this btn for switch row only
             	int i = 0, j = 0, found = 0;

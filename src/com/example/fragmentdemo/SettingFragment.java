@@ -26,15 +26,33 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;  
 import java.util.List;  
 import java.util.Map;
+import java.util.StringTokenizer;
+
+
 
 
 
 public class SettingFragment extends Fragment {
+	private byte remote_dev_hour;
+	private byte remote_dev_min;
+	private byte remote_dev_second;
+	private EditText time_edittext;
 
+	public void dev_time_update(byte hour, byte min, byte sec){
+		remote_dev_hour = (byte)hour;
+		remote_dev_min = (byte)min;
+		remote_dev_second = sec;
+		if(time_edittext == null)
+			return;
+        time_edittext.setText(remote_dev_hour + ":" + remote_dev_min + ":" + remote_dev_second);
+	}
+	
     /** click listen for save/restore button*/
     private class SettingButtonClickListener implements OnClickListener {
         @Override  
           public void onClick(View v) {
+        	byte [] buf = new byte[24];
+        	int retry;
             switch (v.getId()){
               case R.id.setting_save_btn:
                 saveSetting(((MainActivity)getActivity()).__params.getEditor());
@@ -42,6 +60,53 @@ public class SettingFragment extends Fragment {
                 break;
               case R.id.setting_restore_btn:
                 break;
+                
+              case R.id.time_set_btn:
+            	  
+                  String timeStr = time_edittext.getText().toString();
+                  StringTokenizer st = new StringTokenizer  (timeStr , ":") ; 
+                  buf[0] = 13;
+                  buf[1] = 8;
+                  buf[2] = 7;
+                  buf[3] = 0;
+                  if(st.hasMoreTokens())
+                    buf[4] = (byte)(Integer.parseInt(st.nextToken()) % 24);
+                  else{
+                      Toast.makeText(getActivity(), "time " + timeStr + " format error",1000).show();
+                      return;
+                  }
+                  if(st.hasMoreTokens()){
+                	  buf[5] = (byte)Integer.parseInt(st.nextToken());
+                  }else{
+                      Toast.makeText(getActivity(), "time " + timeStr + " format error",1000).show();
+                      return;
+                  }
+                  if(st.hasMoreTokens()){
+                	  buf[6] = (byte)Integer.parseInt(st.nextToken());
+                  }else{
+                      Toast.makeText(getActivity(), "time " + timeStr + " format error",1000).show();
+                      return;
+                  }
+                  
+                  for(retry = 0; retry < 3; retry++){
+                  if(24 == ((MainActivity)getActivity()).bt.remoteInfomationSave(0xff, 0,
+          				KTANK_CMD.KFISH_CMD_SET_DEV_TIME, buf, 24)){
+                  	
+                  	break;
+                  }
+                  }
+                  
+            	  break;
+              case R.id.time_get_btn:
+                  
+                  for(retry = 0; retry < 3; retry++){
+                  if(24 == ((MainActivity)getActivity()).bt.remoteInfomationRequest(0xff, 0,
+          				KTANK_CMD.KFISH_CMD_GET_DEV_TIME, buf, 24)){
+                  	dev_time_update(buf[4], buf[5], buf[6]);
+                  	break;
+                  }
+                  }
+            	  break;
               default:
                 if(renameView == null){
                     Toast.makeText(((MainActivity)getActivity()), "illegal button, renameView is null", Toast.LENGTH_SHORT).show();
@@ -55,7 +120,7 @@ public class SettingFragment extends Fragment {
                     ((TextView)deviceRow[popupDevId].findViewById(R.id.setting_deviceName)).setText(newName);
                     
                     
-                    byte [] buf = new byte[24];
+                    
                     byte [] namebuf;
                     kTankDevice device = ((MainActivity)getActivity()).device[popupDevId];
                     device.name = newName;
@@ -260,6 +325,20 @@ public class SettingFragment extends Fragment {
         renameView = inflater.inflate(R.layout.subwindow_rename_layout, container, false);
         ((Button)renameView.findViewById(R.id.dev_rename_ok_btn)).setOnClickListener(settingBtnOnClkLIsten);
         ((Button)renameView.findViewById(R.id.dev_rename_cancel_btn)).setOnClickListener(settingBtnOnClkLIsten);
+        time_edittext = (EditText)settingLayout.findViewById(R.id.time_edit_text);
+        byte [] buf = new byte[24];
+        int retry;
+        for(retry = 0; retry < 3; retry++){
+        if(24 == ((MainActivity)getActivity()).bt.remoteInfomationRequest(0xff, 0,
+				KTANK_CMD.KFISH_CMD_GET_DEV_TIME, buf, 24)){
+        	dev_time_update(buf[4], buf[5], buf[6]);
+        	break;
+        }
+        }
+        Button btn = (Button)settingLayout.findViewById(R.id.time_get_btn);
+        btn.setOnClickListener(settingBtnOnClkLIsten);
+        btn = (Button)settingLayout.findViewById(R.id.time_set_btn);
+        btn.setOnClickListener(settingBtnOnClkLIsten);
         return settingLayout;
     }
         
@@ -294,6 +373,7 @@ public class SettingFragment extends Fragment {
             }
                         
         }
+        
     }
         
 }
