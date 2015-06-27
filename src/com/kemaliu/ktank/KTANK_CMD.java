@@ -1,4 +1,4 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 public class KTANK_CMD {
 	final static int KFISH_CMD_TIME_NOTIRY = 0; /*
@@ -56,7 +56,7 @@ public class KTANK_CMD {
 
 	final static int KFISH_CMD_GET_DEVICES_INFO = 0x80;
 	final static int KFISH_CMD_GET_DEVICE_NAME = 0x81;
-	final static int KFISH_CMD_GET_CTRL_INFO = 0x82;
+	final static int KFISH_CMD_GET_CTRL_STATUS = 0x82;
 	final static int KFISH_CMD_GET_CTRL_NAME = 0x83;
 	final static int KFISH_CMD_GET_CTRL_CFG = 0x84;
 	final static int KFISH_CMD_GET_DEV_TIME = 0x85;

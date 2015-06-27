@@ -1,4 +1,4 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 import java.util.Map;
 

@@ -1,6 +1,8 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 import java.util.Arrays;
+
+import com.example.fragmentdemo.R;
 
 import android.app.Fragment;
 import android.os.Bundle;

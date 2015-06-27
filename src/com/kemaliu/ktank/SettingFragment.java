@@ -1,4 +1,4 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 import android.app.Fragment;
 import android.content.SharedPreferences.Editor;
@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+import com.example.fragmentdemo.R;
+import android.widget.Toast;
 
 
 
@@ -57,6 +59,8 @@ public class SettingFragment extends Fragment {
               case R.id.setting_save_btn:
                 saveSetting(((MainActivity)getActivity()).__params.getEditor());
                 ((MainActivity)getActivity()).__params.save();
+                Toast.makeText(((MainActivity)getActivity()).getApplicationContext(), "保存配置成功，需要重启软件",
+						Toast.LENGTH_SHORT).show();
                 break;
               case R.id.setting_restore_btn:
                 break;
@@ -346,7 +350,7 @@ public class SettingFragment extends Fragment {
     public void saveSetting(Editor edit){
         int i;
         edit.clear();
-        edit.putInt("tank_number", tankNumber);
+        ((MainActivity)this.getActivity()).tankNumber = tankNumber;
         ((MainActivity)this.getActivity()).saveSetting();
         
     }
@@ -355,7 +359,7 @@ public class SettingFragment extends Fragment {
         Object tObj = ((MainActivity)this.getActivity()).__param_map.get("tank_number");
         if(tObj == null){
             /* no configuration*/
-            tankNumber = 1;
+            tankNumber = 3;
         }else{
             String tStr = tObj.toString();
             tankNumber = Integer.parseInt(tStr);

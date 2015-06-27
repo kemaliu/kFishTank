@@ -1,8 +1,10 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 
 
 import java.util.Arrays;
+
+import com.example.fragmentdemo.R;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -29,12 +31,12 @@ public class LedCfgFragment extends Fragment {
 	int[] current_pwm_hour = new int[24];
 
 	private int move;
-
+	private int hour;
 	private class seekBarChangeListen implements
 			SeekBar.OnSeekBarChangeListener {
 
 		private LinearLayout parentLayout;
-		private int hour;
+		
 
 		public seekBarChangeListen(LinearLayout ctrlLayout, int id) {
 			parentLayout = ctrlLayout;
@@ -106,6 +108,18 @@ public class LedCfgFragment extends Fragment {
 					value = 255;
 					mod = 1;
 				} else {
+				}
+				int i;
+				for(i=0;i<24;i++)
+					if(parentLayout == ledrow[i])
+						break;
+				current_pwm_hour[i] = value;
+				if(true == Arrays.equals(current_pwm_hour, original_pwm_hour)){
+					saveBtn.setEnabled(false);
+					cancelBtn.setEnabled(false);
+				}else{
+					saveBtn.setEnabled(true);
+					cancelBtn.setEnabled(true);
 				}
 				bar.setProgress(value);
 				if (mod != 0) {

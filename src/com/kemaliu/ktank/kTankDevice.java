@@ -1,4 +1,4 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 import android.os.Bundle;
 import android.view.View;
@@ -23,12 +23,14 @@ public class kTankDevice {
 			int[] hour = new int[24];
 			int temperature;
 			int fanPwm;
+			int pwm_now;
 		}
 
 		public class KTANKCTRL_SWITCH {
 			byte[] hour = new byte[24];
 			int temperature;
 			int fanPwm;
+			int on_now;/*当前状态*/
 		}
 
 		
@@ -76,10 +78,22 @@ public class kTankDevice {
 				}
 			}
 		}
-
-		void updateLocalCfg(int hour, int value) {
-
+		
+		void updateLocalStatus(byte[] info) {
+			int i;
+			if (controllerType == 0) { // LED
+				//char temperature;           /* led temperature */
+			    //UINT8 fanPWM;               /* led temperature */
+			    //UINT8 pwm_now;              /* LED PWM */
+			    //unsigned char watt;         /* 最大功耗 */
+				led.temperature = info[1] < 0?info[1]+256:info[1];
+				led.fanPwm = info[2] < 0?info[2]+256:info[2];
+				led.pwm_now = info[3] < 0?info[3]+256:info[3];
+			} else { // switch
+				swi.on_now = info[1];
+			}
 		}
+
 		
 		public int getCtrlId(kTankDevice dev, kTankDevice.KTANKCTRL ctrl){
 			int i;

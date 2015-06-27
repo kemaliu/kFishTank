@@ -1,6 +1,8 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 import java.util.Map;
+
+import com.example.fragmentdemo.R;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -332,7 +334,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		Object tObj = __param_map.get("tank_number");
 		if (tObj == null) {
 			/* no configuration */
-			tankNumber = 1;
+			tankNumber = 3;
 		} else {
 			String tStr = tObj.toString();
 			tankNumber = Integer.parseInt(tStr);
@@ -360,11 +362,13 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	public void saveSetting() {
 		int i;
+		
 		Editor edit = __params.getEditor();
+		edit.putInt("tank_number", tankNumber);
 		for (i = 0; i < deviceNum; i++) {
-			edit.putString("" + device[i].devId, "y");
-			edit.putInt("devId" + device[i].devId, device[i].tankId);
-			edit.putString("devName" + device[i].devId, device[i].name);
+		    edit.putString("" + device[i].devId, "y");
+		    edit.putInt("devId" + device[i].devId, device[i].tankId);
+		    edit.putString("devName" + device[i].devId, device[i].name);
 		}
 		edit.commit();
 	}

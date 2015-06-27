@@ -1,4 +1,4 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,10 +21,10 @@ import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.fragmentdemo.BLUETOOTH_CTRL;
-import com.example.fragmentdemo.KTANK_CMD;
-import com.example.fragmentdemo.kTankDevice;
-import com.example.fragmentdemo.kTankDevice.KTANKCTRL;
+import com.kemaliu.ktank.BLUETOOTH_CTRL;
+import com.kemaliu.ktank.KTANK_CMD;
+import com.kemaliu.ktank.kTankDevice;
+import com.kemaliu.ktank.kTankDevice.KTANKCTRL;
 
 public class BLUETOOTH_CTRL {
 	Handler msgHandler;
@@ -359,9 +359,10 @@ public class BLUETOOTH_CTRL {
 			// get controller base info
 			for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
 				if (24 == remoteInfomationRequest(device.devId, ctrl_i,
-						KTANK_CMD.KFISH_CMD_GET_CTRL_INFO, info, 24)) {
+						KTANK_CMD.KFISH_CMD_GET_CTRL_STATUS, info, 24)) {
 					ctrl = device.new KTANKCTRL(info);
 					device.controller[ctrl_i] = ctrl;
+					ctrl.updateLocalStatus(info);
 					break;
 				}
 			}
@@ -407,6 +408,7 @@ public class BLUETOOTH_CTRL {
 					break;
 				}
 			}
+
 			if (retry >= MAX_RETRY_NUMBER) {
 				return -1;
 			}

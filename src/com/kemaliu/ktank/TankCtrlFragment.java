@@ -1,6 +1,8 @@
-package com.example.fragmentdemo;
+package com.kemaliu.ktank;
 
 import java.io.UnsupportedEncodingException;
+
+import com.example.fragmentdemo.R;
 
 
 
@@ -376,12 +378,12 @@ public class TankCtrlFragment extends Fragment {
                         tv.setOnLongClickListener(devRenameListen);
                         SeekBar bar = ((SeekBar) layout.findViewById(R.id.ctrl_led_bar));
                         //((SeekBar) layout.findViewById(R.id.ctrl_led_bar))
-                          bar.setOnSeekBarChangeListener(new seekBarChangeListen(
+                        bar.setOnSeekBarChangeListener(new seekBarChangeListen(
                                                           layout, i, j));
-                        ((EditText) layout
-                         .findViewById(R.id.ctrl_led_pwm_value))
-                          .addTextChangedListener(new pwmEditWatcher(
+                        EditText dev_et = ((EditText) layout.findViewById(R.id.ctrl_led_pwm_value));
+                        dev_et.addTextChangedListener(new pwmEditWatcher(
                                                       layout, i, j));
+                        dev_et.setText(""+device.controller[j].led.pwm_now);
                         layout.setVisibility(View.VISIBLE);
                         Button btn = (Button) layout
                                      .findViewById(R.id.ctrl_led_cfg_btn);
@@ -399,9 +401,11 @@ public class TankCtrlFragment extends Fragment {
                                      .findViewById(R.id.ctrl_led_cfg_btn);
                         CFG_BTN_LISTEN listen = new CFG_BTN_LISTEN(deviceList[i], deviceList[i].controller[j]);
                         btn.setOnClickListener(listen);
-                        btn = (Button) layout
+                        ToggleButton t_btn = (ToggleButton) layout
                                 .findViewById(R.id.ctrl_onoff_btn);
-                        btn.setOnClickListener(listen);
+                        t_btn.setChecked(device.controller[j].swi.on_now==0?false:true);
+                        
+                        
                     	}
                 }
                 break;
