@@ -35,19 +35,20 @@ public class TankCtrlFragment extends Fragment {
     /** 主layout*/
     private View tankBaseLayout;
     /**页面中允许的最多设备数量*/
-    final int MAX_DEVICE_NUM = 8;
+    final int MAX_DEVICE_NUM = 10;
+    final int MAX_CTRL_NUM_OF_DEVICE = 10;
 
     /**每一个设备在该页面中有一个自己的layout用于显示设备名称/ID*/
     private LinearLayout[] deviceLayout = new LinearLayout[MAX_DEVICE_NUM];
     /**与deviceLayout对应的设备句柄*/
     public kTankDevice[] deviceList = new kTankDevice[MAX_DEVICE_NUM];
     /**
-     * tank页面中， 每一个设备下面有2个LED控制器或4个开关控制器，共6个 0-1给LED用，2-5给开关用 
+     * tank页面中， 每一个设备下面有2个LED控制器或4个开关控制器，共10个 0-1给LED用，2-9给开关用 
      ＊6个设备都是预先创建好 */
-    private LinearLayout[][] ctrlLayout = new LinearLayout[MAX_DEVICE_NUM][6];
+    private LinearLayout[][] ctrlLayout = new LinearLayout[MAX_DEVICE_NUM][MAX_CTRL_NUM_OF_DEVICE];
     /**与ctrlLayout对应的控制器句柄*/
-    kTankDevice.KTANKCTRL[][] ctrlLists = new kTankDevice.KTANKCTRL[MAX_DEVICE_NUM][6];
-    int [][] pause_value_list = new int[MAX_DEVICE_NUM][6];
+    kTankDevice.KTANKCTRL[][] ctrlLists = new kTankDevice.KTANKCTRL[MAX_DEVICE_NUM][MAX_CTRL_NUM_OF_DEVICE];
+    int [][] pause_value_list = new int[MAX_DEVICE_NUM][MAX_CTRL_NUM_OF_DEVICE];
     
     tankButtonClickListener tankBtnClickListen = new tankButtonClickListener();
     /** tank页面按键监听 */
@@ -75,7 +76,7 @@ public class TankCtrlFragment extends Fragment {
                 		  
                 		  buf[0] = (byte)pauseMin;
                 		  //获取配置的暂停的数值
-                		  for(j=0; j<6; j++){
+                		  for(j=0; j<MAX_CTRL_NUM_OF_DEVICE; j++){
                 			  if(ctrlLists[i][j] == null)
                 				  continue;
                 			  ctrl = ctrlLists[i][j];
@@ -213,7 +214,7 @@ public class TankCtrlFragment extends Fragment {
             	//this btn for switch row only
             	int i = 0, j = 0, found = 0;
             	for(i=0; i<MAX_DEVICE_NUM; i++){
-            		for(j=0; j<6; j++){
+            		for(j=0; j<MAX_CTRL_NUM_OF_DEVICE; j++){
             			if(ctrlLists[i][j] == null)
             				continue;
             			if(ctrlLists[i][j] == controller){
@@ -427,8 +428,8 @@ public class TankCtrlFragment extends Fragment {
             int foundId, foundJd;
             foundId = -1;
             foundJd = -1;
-            for (i = 0; i < 8; i++)
-              for (j = 0; j < 6; j++) {
+            for (i = 0; i < MAX_DEVICE_NUM; i++)
+              for (j = 0; j < MAX_CTRL_NUM_OF_DEVICE; j++) {
                   if (v.getParent() == ctrlLayout[i][j]) {
                       foundId = i;
                       foundJd = j;
@@ -482,7 +483,7 @@ public class TankCtrlFragment extends Fragment {
             int j;
             deviceLayout[i] = (LinearLayout) inflater.inflate(
                 R.layout.fragment_tank_device_layout, container, false);
-            for (j = 0; j < 6; j++) {
+            for (j = 0; j < MAX_CTRL_NUM_OF_DEVICE; j++) {
                 if (j < 2) {
                     ctrlLayout[i][j] = (LinearLayout) inflater.inflate(
                         R.layout.fragment_tank_led_cfg_layout, container,

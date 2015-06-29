@@ -73,7 +73,7 @@ public class LedCfgFragment extends Fragment {
 				current_pwm_hour[hour] = progress;
 				if(true == Arrays.equals(current_pwm_hour, original_pwm_hour)){
 					saveBtn.setEnabled(false);
-					cancelBtn.setEnabled(false);
+					cancelBtn.setEnabled(true);
 				}else{
 					saveBtn.setEnabled(true);
 					cancelBtn.setEnabled(true);
@@ -116,7 +116,7 @@ public class LedCfgFragment extends Fragment {
 				current_pwm_hour[i] = value;
 				if(true == Arrays.equals(current_pwm_hour, original_pwm_hour)){
 					saveBtn.setEnabled(false);
-					cancelBtn.setEnabled(false);
+					cancelBtn.setEnabled(true);
 				}else{
 					saveBtn.setEnabled(true);
 					cancelBtn.setEnabled(true);
