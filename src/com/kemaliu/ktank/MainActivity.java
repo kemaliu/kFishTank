@@ -186,7 +186,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	/*获取控制器的配置/状态信息*/
 	public int ctrl_info_req(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
-		return ctrl_info_req(devId, ctrlId, cmdType, buf, bufLen);
+		return this.bluetooth_controller.remoteInfomationRequest(devId, ctrlId, cmdType, buf, bufLen);
 	}
 
 	/**
