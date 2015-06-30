@@ -60,7 +60,7 @@
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
             android:layout_marginRight="28dp"
-            android:text="取消" />
+            android:text="退出" />
     </RelativeLayout>
 
 </LinearLayout>

@@ -104,7 +104,7 @@ public class SwitchCfgFragment extends Fragment {
 					buf[i] = (byte) onoffController.swi.hour[i];
 				}
 				int devId = onoffController.getCtrlId(onoffDevice, onoffController);
-				ma.bt.remoteInfomationSave(onoffDevice.devId, devId,
+				ma.ctrl_setting_save(onoffDevice.devId, devId,
 						KTANK_CMD.KFISH_CMD_SET_CTRL_CFG, buf, 24);
 				ma.setTabSelection(lastFragmentId);
 			}

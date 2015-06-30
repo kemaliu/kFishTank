@@ -31,12 +31,13 @@ public class LedCfgFragment extends Fragment {
 	int[] current_pwm_hour = new int[24];
 
 	private int move;
-	private int hour;
+	
 	private class seekBarChangeListen implements
 			SeekBar.OnSeekBarChangeListener {
-
+	    // 该seekbar属于那个layout,父layou
 		private LinearLayout parentLayout;
-		
+	    // 该seekbar属于那个hour
+		private int hour;
 
 		public seekBarChangeListen(LinearLayout ctrlLayout, int id) {
 			parentLayout = ctrlLayout;
@@ -84,9 +85,10 @@ public class LedCfgFragment extends Fragment {
 
 	private class pwmEditWatcher implements TextWatcher {
 		private LinearLayout parentLayout;
-
-		public pwmEditWatcher(LinearLayout base_layout) {
+	    private int  hour;
+	    public pwmEditWatcher(LinearLayout base_layout, int id) {
 			parentLayout = base_layout;
+			hour = id;
 		}
 
 		public void afterTextChanged(Editable s) {
@@ -109,11 +111,7 @@ public class LedCfgFragment extends Fragment {
 					mod = 1;
 				} else {
 				}
-				int i;
-				for(i=0;i<24;i++)
-					if(parentLayout == ledrow[i])
-						break;
-				current_pwm_hour[i] = value;
+				current_pwm_hour[hour] = value;
 				if(true == Arrays.equals(current_pwm_hour, original_pwm_hour)){
 					saveBtn.setEnabled(false);
 					cancelBtn.setEnabled(true);
@@ -165,7 +163,7 @@ public class LedCfgFragment extends Fragment {
 			    	buf[i] = (byte)ledController.led.hour[i];
 			    }
 			    int devId = ledController.getCtrlId(ledDevice, ledController);
-			    ma.bt.remoteInfomationSave(ledDevice.devId, devId, 
+			    ma.ctrl_setting_save(ledDevice.devId, devId, 
 			    		KTANK_CMD.KFISH_CMD_SET_CTRL_CFG, buf, 24);
 			    ma.setTabSelection(lastFragmentId);
 			}
@@ -188,7 +186,7 @@ public class LedCfgFragment extends Fragment {
 			//tv.setText(i + "点");
 			EditText et = (EditText) ledrow[i].findViewById(R.id.led_cfg_value);
 			//et.setText("" + current_pwm_hour[i]);
-			et.addTextChangedListener(new pwmEditWatcher(ledrow[i]));
+			et.addTextChangedListener(new pwmEditWatcher(ledrow[i], i));
 			SeekBar bar = (SeekBar) ledrow[i].findViewById(R.id.led_cfg_bar);
 			//bar.setProgress(current_pwm_hour[i]);
 			bar.setOnSeekBarChangeListener(new seekBarChangeListen(ledrow[i], i));
@@ -226,7 +224,7 @@ public class LedCfgFragment extends Fragment {
 			tv.setText(i + "点");
 			EditText et = (EditText) ledrow[i].findViewById(R.id.led_cfg_value);
 			et.setText("" + current_pwm_hour[i]);
-			et.addTextChangedListener(new pwmEditWatcher(ledrow[i]));
+			et.addTextChangedListener(new pwmEditWatcher(ledrow[i], i));
 			SeekBar bar = (SeekBar) ledrow[i].findViewById(R.id.led_cfg_bar);
 			bar.setProgress(current_pwm_hour[i]);
 			bar.setOnSeekBarChangeListener(new seekBarChangeListen(ledrow[i], i));

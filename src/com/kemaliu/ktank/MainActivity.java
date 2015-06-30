@@ -36,7 +36,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	private int clickCnt = 0;
 
 	private TankCtrlFragment TankFragment[] = new TankCtrlFragment[3];
-	private View tankLayout[] = new View[3];
+	/*三个鱼缸的激活图标*/
+	private View tank_select_icon[] = new View[3];
 
 	public LedCfgFragment LEDCfgFragment = null;
 	public SwitchCfgFragment SwitchCfgFragment = null;
@@ -48,7 +49,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	/**
 	 * 设置界面布局
 	 */
-	private View settingLayout;
+	private View setting_select_icon;
 
 	private ImageView tankIconImage[] = new ImageView[3];
 
@@ -76,18 +77,29 @@ public class MainActivity extends Activity implements OnClickListener {
 	 * 在Tab布局上显示设置标题的控件
 	 */
 	private TextView settingText;
+	
+	/*蓝牙消息的几个类型*/
+	final int BT_STATE_READY = 0x1010;
 
+	final int BT_STATE_LOG = 0x4000;
+	final int BT_STATE_LOG_RAW = 0x4001;
+
+
+	final int BT_FATAL_ERROR = 0x8005;
+	final int BT_STATE_FORCE_QUIT = 0xffff;
+    
+	
 	/**
 	 * 用于对Fragment进行管理
 	 */
 	private FragmentManager fragmentManager;
 
-	public kTankParam __params;
+	public Parameters __params;
 	public Map<String, ?> __param_map;
 
-	BLUETOOTH_CTRL bt;
+	BLUETOOTH_CTRL bluetooth_controller;
 
-	private void gotoStartWindow() {
+	private void enterWelcomPage() {
 		setContentView(R.layout.welcome_layout);
 	}
 
@@ -101,17 +113,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		// 第一次启动时选中第0个tab
 		setTabSelection(0);
 	}
+	
 
-	final int BT_STATE_READY = 0x1010;
-
-	final int BT_STATE_LOG = 0x4000;
-	final int BT_STATE_LOG_RAW = 0x4001;
-
-
-	final int BT_FATAL_ERROR = 0x8005;
-	final int BT_STATE_FORCE_QUIT = 0xffff;
-
-	public Handler msgHandler = new Handler() {
+	
+	//欢迎页面需要显示后台通信任务的状态信息
+	public Handler background_msg_receiver = new Handler() {
 		public void handleMessage(Message msg) {
 			Bundle bd;
 			TextView tv = (TextView) (View) (getWindow().getDecorView())
@@ -144,7 +150,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	class BGTask implements Runnable {
 		public void run() {
-			bt.btInit();
+			bluetooth_controller.btInit();
 		}
 	}
 
@@ -153,25 +159,45 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		__params = new kTankParam(MainActivity.this);
+		__params = new Parameters(MainActivity.this);
 		__param_map = __params.getPreferences();
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		gotoStartWindow();
-		bt = new BLUETOOTH_CTRL(this, msgHandler);
+		enterWelcomPage();
+		bluetooth_controller = new BLUETOOTH_CTRL(this, background_msg_receiver);
 		backGroundThread = new Thread(new BGTask());
 		backGroundThread.start();
+	}
+
+	
+	/*保存控制器的配置信息*/
+	public int ctrl_setting_save(int devId, int ctrlId, int cmdType,
+			byte[] buf, int bufLen) {
+		int ret = this.bluetooth_controller.remoteInfomationSave(devId, ctrlId, cmdType, buf, bufLen);
+		if(ret == 24){
+			Toast.makeText(getApplicationContext(), "保存成功",
+					Toast.LENGTH_SHORT).show();
+		}else{
+			Toast.makeText(getApplicationContext(), "保存失败",
+					Toast.LENGTH_SHORT).show();
+		}
+		return ret;
+	}
+	/*获取控制器的配置/状态信息*/
+	public int ctrl_info_req(int devId, int ctrlId, int cmdType,
+			byte[] buf, int bufLen) {
+		return ctrl_info_req(devId, ctrlId, cmdType, buf, bufLen);
 	}
 
 	/**
 	 * 在这里获取到每个需要用到的控件的实例，并给它们设置好必要的点击事件。
 	 */
 	private void initViews() {
-		tankLayout[0] = findViewById(R.id.tank1_layout);
-		tankLayout[1] = findViewById(R.id.tank2_layout);
-		tankLayout[2] = findViewById(R.id.tank3_layout);
+		tank_select_icon[0] = findViewById(R.id.tank1_layout);
+		tank_select_icon[1] = findViewById(R.id.tank2_layout);
+		tank_select_icon[2] = findViewById(R.id.tank3_layout);
 
-		settingLayout = findViewById(R.id.setting_layout);
+		setting_select_icon = findViewById(R.id.setting_layout);
 		tankIconImage[0] = (ImageView) findViewById(R.id.tank1_image);
 		tankIconImage[1] = (ImageView) findViewById(R.id.tank2_image);
 		tankIconImage[2] = (ImageView) findViewById(R.id.tank3_image);
@@ -180,10 +206,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		contactsText = (TextView) findViewById(R.id.contacts_text);
 		newsText = (TextView) findViewById(R.id.news_text);
 		settingText = (TextView) findViewById(R.id.setting_text);
-		tankLayout[0].setOnClickListener(this);
-		tankLayout[1].setOnClickListener(this);
-		tankLayout[2].setOnClickListener(this);
-		settingLayout.setOnClickListener(this);
+		tank_select_icon[0].setOnClickListener(this);
+		tank_select_icon[1].setOnClickListener(this);
+		tank_select_icon[2].setOnClickListener(this);
+		setting_select_icon.setOnClickListener(this);
 	}
 
 	@Override

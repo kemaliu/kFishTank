@@ -89,7 +89,7 @@ public class TankCtrlFragment extends Fragment {
                 			  }
                 		  }
                 		  for(j=0; j<3; j++){
-                			  if(24 == ((MainActivity) getActivity()).bt.remoteInfomationSave(device.devId, 
+                			  if(24 == ((MainActivity) getActivity()).ctrl_setting_save(device.devId, 
                 				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24))
                 				  break;
                 		  }
@@ -108,7 +108,7 @@ public class TankCtrlFragment extends Fragment {
                 		  for(j=0; j<24; j++)
                 			  buf[j] = 0;
                 		  for(j=0; j<3; j++){
-                			  if(24 == ((MainActivity) getActivity()).bt.remoteInfomationSave(device.devId, 
+                			  if(24 == ((MainActivity) getActivity()).bluetooth_controller.remoteInfomationSave(device.devId, 
                 				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24))
                 				  break;
                 		  }
@@ -152,7 +152,7 @@ public class TankCtrlFragment extends Fragment {
                               break;
                         }
                         System.arraycopy(namebuf, 0, buf, 0, namebuf.length>23?23:namebuf.length);
-                        ((MainActivity) getActivity()).bt.remoteInfomationSave(
+                        ((MainActivity) getActivity()).bluetooth_controller.remoteInfomationSave(
                             device.devId, ctrl.getCtrlId(device, ctrl),
                             KTANK_CMD.KFISH_CMD_SET_CTRL_NAME, buf, 24);
                     } catch (UnsupportedEncodingException e) {
@@ -202,6 +202,7 @@ public class TankCtrlFragment extends Fragment {
             	case R.id.ctrl_led_cfg_btn:
 	            if (controller.controllerType == 0) {// led
 	                ((MainActivity) getActivity()).setTabSelection(4);
+	                //根据老的配置信息更新界面的显示信息
 	                ((MainActivity) getActivity()).LEDCfgFragment.updateLEDCfg(
 	                    device, controller, tankId);
 	            } else {

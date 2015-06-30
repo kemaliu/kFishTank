@@ -1,3 +1,4 @@
+/*设置页面*/
 package com.kemaliu.ktank;
 
 import android.app.Fragment;
@@ -93,7 +94,7 @@ public class SettingFragment extends Fragment {
                   }
                   
                   for(retry = 0; retry < 3; retry++){
-                  if(24 == ((MainActivity)getActivity()).bt.remoteInfomationSave(0xff, 0,
+                  if(24 == ((MainActivity)getActivity()).ctrl_setting_save(0xff, 0,
           				KTANK_CMD.KFISH_CMD_SET_DEV_TIME, buf, 24)){
                   	
                   	break;
@@ -104,7 +105,7 @@ public class SettingFragment extends Fragment {
               case R.id.time_get_btn:
                   
                   for(retry = 0; retry < 3; retry++){
-                  if(24 == ((MainActivity)getActivity()).bt.remoteInfomationRequest(0xff, 0,
+                  if(24 == ((MainActivity)getActivity()).ctrl_info_req(0xff, 0,
           				KTANK_CMD.KFISH_CMD_GET_DEV_TIME, buf, 24)){
                   	dev_time_update(buf[4], buf[5], buf[6]);
                   	break;
@@ -137,7 +138,7 @@ public class SettingFragment extends Fragment {
                               break;
                         }
                         System.arraycopy(namebuf, 0, buf, 0, namebuf.length>23?23:namebuf.length);
-    					((MainActivity)getActivity()).bt.remoteInfomationSave(device.devId, 0,
+    					((MainActivity)getActivity()).bluetooth_controller.remoteInfomationSave(device.devId, 0,
     							KTANK_CMD.KFISH_CMD_SET_DEVICE_NAME, buf, 24);
     				} catch (UnsupportedEncodingException e) {
     					// TODO Auto-generated catch block
@@ -333,7 +334,7 @@ public class SettingFragment extends Fragment {
         byte [] buf = new byte[24];
         int retry;
         for(retry = 0; retry < 3; retry++){
-        if(24 == ((MainActivity)getActivity()).bt.remoteInfomationRequest(0xff, 0,
+        if(24 == ((MainActivity)getActivity()).ctrl_info_req(0xff, 0,
 				KTANK_CMD.KFISH_CMD_GET_DEV_TIME, buf, 24)){
         	dev_time_update(buf[4], buf[5], buf[6]);
         	break;

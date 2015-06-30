@@ -48,7 +48,9 @@ public class BLUETOOTH_CTRL {
 
 	MainActivity mainActivity;
 
-	public BLUETOOTH_CTRL(MainActivity act, Handler handler) {
+	public BLUETOOTH_CTRL(MainActivity act,//主窗口句柄 
+			Handler handler//住窗口消息处理单元句柄
+			) {
 		mainActivity = act;
 		msgHandler = handler;
 	}
@@ -627,7 +629,7 @@ public class BLUETOOTH_CTRL {
      * @param timeoutMs 等待的时间长度，单位ms.如果超时，返回读取的长度
      * @return 获取的数据长度，如果CRC有错误，返回-1
      */
-	public int waitACK(byte[] buf, int waitLen, int timeoutMs) {
+	private int waitACK(byte[] buf, int waitLen, int timeoutMs) {
 		long entry_time = System.currentTimeMillis();
 		int len, pos = 0, sync = 0;
 		byte[] rxBuf = new byte[64];
