@@ -424,7 +424,7 @@ public class BLUETOOTH_CTRL {
 		byte[] info = new byte[24];
 		// get device lists
 		for (retry = 0; retry < MAX_RETRY_NUMBER; retry++) {
-			ret = remoteInfomationRequest(0xff, 0,
+			ret = remoteInfomationRequest(0, 0,
 					KTANK_CMD.KFISH_CMD_GET_DEVICES_INFO, info, 24);
 			if (ret == 24) {
 				break;
@@ -683,7 +683,25 @@ public class BLUETOOTH_CTRL {
 		}
 		return pos - 3;
 	}
-
+//   struct rf_cmd{
+//   UINT8 srcId;                /* 源设备ID */
+//    UINT8 destId;               /* 目的设备ID */
+//    UINT8 rfPlane:4;            /* 跳频方案编号 */
+//    UINT8 ctrlId:4;             /* ctrl ID，命令发向的控制器ID */
+//    UINT8 cmd;                  /* KFISH_CMD_T */
+//    union{
+//        struct{
+//            UINT8 magic; /* 随机数,主机发送的每一个消息都有一个唯一的随机数 */
+//            UINT8 seqNum;               /* sequence number */
+//        };
+//        UINT16 identification;  /* magic和seq合并在一起构成一个识别码 */
+//    };
+//    UINT8 rsv[2];               /* device */
+//    UINT8 data[24];             /* cmd data */
+//   };
+/* UART发送的数据除了struct rf_cmd外，前面加了3Bytes的头
+ * 前两个字节为0xfe,0x1c, 第三个字节为CRC
+ * */
 	public int remoteInfomationRequest(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
 		synchronized(bt_sem_obj){
@@ -691,18 +709,19 @@ public class BLUETOOTH_CTRL {
 		byte[] rxBuf = new byte[64];
 		int i;
 		int cmdLen, rxLen;
-		cmd[0] = (byte) 0xfe;
-		cmd[1] = (byte) 0x1c;
-		
-		cmd[3] = 0;// src id ,ignore
-		cmd[4] = (byte) devId;// dest id, deviceId
-		cmd[5] = 0;// rfPlane, ignore
-		cmd[6] = 0;// rfChan, ignore
-		cmd[7] = (byte) cmdType;// cmd
-		cmd[8] = (byte) devId;// devId
-		cmd[9] = (byte) ctrlId;// ctrlId
-		cmd[10] = 0;// seq, ignore
-		//CRC
+		cmd[0] = (byte) 0xfe;//src
+		cmd[1] = (byte) 0x1c;//src
+		cmd[2] = 0;//CRC后面再计算
+		cmd[3] = 0;//srcId,串口通信中无用
+		cmd[4] = (byte) devId;//destID, 目的设备ID
+		cmd[5] = (byte)(ctrlId << 4);//高4bit, plane(串口通信中无用),低4bit controller ID 
+		cmd[6] = (byte) cmdType;// src id ,ignore
+		cmd[7] = (byte) devId;// magic， 串口通信中无用
+		cmd[8] = 0;// seq, 串口通信中无用
+		cmd[9] = 0;// rsv, 保留
+		cmd[10] = (byte) cmdType;// rsv, 保留
+
+		//计算CRC
 		cmd[2] = 0;
 		for(i=3; i<11; i++)
 			cmd[2] += cmd[i];
@@ -733,19 +752,17 @@ public class BLUETOOTH_CTRL {
 		byte[] cmd = new byte[40];
 		byte[] rxBuf = new byte[64];
 		int cmdLen, rxLen;
-		cmd[0] = (byte) 0xfe;
-		cmd[1] = (byte) 0x1c;
-		//Command
-		cmd[3] = 0;// src id ,ignore
-		cmd[4] = (byte) devId;// dest id, deviceId
-		cmd[5] = 0;// rfPlane, ignore
-		cmd[6] = 0;// rfChan, ignore
-		cmd[7] = (byte) cmdType;// cmd
-		cmd[8] = (byte) devId;// devId
-		cmd[9] = (byte) ctrlId;// ctrlId
-		cmd[10] = 0;// seq, ignore
-		
-
+		cmd[0] = (byte) 0xfe;//src
+		cmd[1] = (byte) 0x1c;//src
+		cmd[2] = 0;//CRC后面再计算
+		cmd[3] = 0;//srcId,串口通信中无用
+		cmd[4] = (byte) devId;//destID, 目的设备ID
+		cmd[5] = (byte)(ctrlId << 4);//高4bit, plane(串口通信中无用),低4bit controller ID 
+		cmd[6] = (byte) cmdType;// src id ,ignore
+		cmd[7] = (byte) devId;// magic， 串口通信中无用
+		cmd[8] = 0;// seq, 串口通信中无用
+		cmd[9] = 0;// rsv, 保留
+		cmd[10] = (byte) cmdType;// rsv, 保留
 		// fill data
 		System.arraycopy(buf, 0, cmd, 11, 24);
 		//CRC
