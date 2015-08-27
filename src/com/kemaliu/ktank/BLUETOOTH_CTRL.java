@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Calendar;
 import java.util.UUID;
 
 import android.bluetooth.BluetoothAdapter;
@@ -291,8 +292,12 @@ public class BLUETOOTH_CTRL {
 			notifyActivity(mainActivity.BT_FATAL_ERROR);
 			return;
 		}
+		
 		notifyActivity(mainActivity.BT_STATE_LOG, "设备数:"
 				+ mainActivity.deviceNum + " :)");
+		
+		kTankTimeUpdate();
+		
 		try {
 			Thread.sleep(1000);
 		} catch (InterruptedException e) {
@@ -418,7 +423,38 @@ public class BLUETOOTH_CTRL {
 		}
 		return 0;
 	}
-
+	/*根据手机时间更新系统时间*/
+	private void kTankTimeUpdate(){
+		int retry;
+	    Calendar c = Calendar.getInstance();  
+	      
+		byte[] buf = new byte[24];
+        for(retry = 0; retry < 3; retry++){
+        if(24 == remoteInfomationRequest(0, 0,
+				KTANK_CMD.KFISH_CMD_GET_DEV_TIME, buf, 24)){
+        	notifyActivity(mainActivity.BT_STATE_LOG, "系统时间:" + buf[0] + "-" +
+        			buf[1] + "-" + buf[2] + "(" + buf[3] + "), "+ buf[4] + ":" + buf[5] + ":" + buf[6]);
+        	break;
+        }
+        }
+        buf[0] = (byte) (c.get(Calendar.YEAR) % 100);  
+       buf[1] = (byte) (c.get(Calendar.MONTH) + 1);
+       buf[2] = (byte) c.get(Calendar.DAY_OF_MONTH);
+	   buf[3] = (byte) (c.get(Calendar.DAY_OF_WEEK) - 1);
+	   buf[4] = (byte)c.get(Calendar.HOUR_OF_DAY);
+	   buf[5] = (byte) c.get(Calendar.MINUTE);
+	   buf[6] = (byte) c.get(Calendar.SECOND);
+      	notifyActivity(mainActivity.BT_STATE_LOG, "当前时间:" + buf[0] + "-" +
+    			buf[1] + "-" + buf[2] + "(" + buf[3] + "), "+ buf[4] + ":" + buf[5] + ":" + buf[6]);
+      	
+      	for(retry = 0; retry < 3; retry++){
+            if(24 == remoteInfomationSave(0, 0,
+    				KTANK_CMD.KFISH_CMD_SET_DEV_TIME, buf, 24)){
+            	
+            	break;
+            }
+            }
+	}
 	private int kTankGetDevicesInfo() {
 		int retry, ret = 0, i;
 		byte[] info = new byte[24];
@@ -747,43 +783,46 @@ public class BLUETOOTH_CTRL {
 
 	public int remoteInfomationSave(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
-		synchronized(bt_sem_obj){
 		int i;
 		byte[] cmd = new byte[40];
 		byte[] rxBuf = new byte[64];
 		int cmdLen, rxLen;
-		cmd[0] = (byte) 0xfe;//src
-		cmd[1] = (byte) 0x1c;//src
-		cmd[2] = 0;//CRC后面再计算
-		cmd[3] = 0;//srcId,串口通信中无用
-		cmd[4] = (byte) devId;//destID, 目的设备ID
-		cmd[5] = (byte)(ctrlId << 4);//高4bit, plane(串口通信中无用),低4bit controller ID 
-		cmd[6] = (byte) cmdType;// src id ,ignore
-		cmd[7] = (byte) devId;// magic， 串口通信中无用
-		cmd[8] = 0;// seq, 串口通信中无用
-		cmd[9] = 0;// rsv, 保留
-		cmd[10] = (byte) cmdType;// rsv, 保留
-		// fill data
-		System.arraycopy(buf, 0, cmd, 11, 24);
-		//CRC
-		cmd[2] = 0;
-		for(i=3; i<35; i++)
-			cmd[2] += cmd[i];
-		cmdLen = 35;
-		try {
-			outStream.write(cmd, 0, cmdLen);
-			rxLen = waitACK(rxBuf, 35, 500);
+		synchronized(bt_sem_obj){
+			cmd[0] = (byte) 0xfe;//src
+			cmd[1] = (byte) 0x1c;//src
+			cmd[2] = 0;//CRC后面再计算
+			cmd[3] = 0;//srcId,串口通信中无用
+			cmd[4] = (byte) devId;//destID, 目的设备ID
+			cmd[5] = (byte)(ctrlId << 4);//高4bit, plane(串口通信中无用),低4bit controller ID 
+			cmd[6] = (byte) cmdType;// src id ,ignore
+			cmd[7] = (byte) devId;// magic， 串口通信中无用
+			cmd[8] = 0;// seq, 串口通信中无用
+			cmd[9] = 0;// rsv, 保留
+			cmd[10] = (byte) cmdType;// rsv, 保留
+			// fill data
+			System.arraycopy(buf, 0, cmd, 11, 24);
+			//CRC
+			cmd[2] = 0;
+			for(i=3; i<35; i++)
+				cmd[2] += cmd[i];
+			cmdLen = 35;
+			try {
+				outStream.write(cmd, 0, cmdLen);
+				rxLen = waitACK(rxBuf, 35, 500);
+	
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return -1;
+			}
 
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return -1;
 		}
 		if (rxLen >= 32) {
 			for (i = 0; i < 24; i++)
 				buf[i] = rxBuf[8 + i];
+			return 24;
+		}else{
+			return 0;
 		}
-		return 24;
-	}
 	}
 }

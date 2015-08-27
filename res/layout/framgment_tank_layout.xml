@@ -53,7 +53,6 @@
         android:layout_alignParentTop="true"
         android:orientation="vertical" >
 
-
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -89,9 +88,10 @@
                 android:id="@+id/tankPauseBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
+                android:layout_weight="0.46"
                 android:text="暂停" />
         </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>

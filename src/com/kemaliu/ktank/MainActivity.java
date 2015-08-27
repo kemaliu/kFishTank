@@ -174,13 +174,13 @@ public class MainActivity extends Activity implements OnClickListener {
 	public int ctrl_setting_save(int devId, int ctrlId, int cmdType,
 			byte[] buf, int bufLen) {
 		int ret = this.bluetooth_controller.remoteInfomationSave(devId, ctrlId, cmdType, buf, bufLen);
-		if(ret == 24){
+		/*if(ret == 24){
 			Toast.makeText(getApplicationContext(), "保存成功",
 					Toast.LENGTH_SHORT).show();
 		}else{
 			Toast.makeText(getApplicationContext(), "保存失败",
 					Toast.LENGTH_SHORT).show();
-		}
+		}*/
 		return ret;
 	}
 	/*获取控制器的配置/状态信息*/

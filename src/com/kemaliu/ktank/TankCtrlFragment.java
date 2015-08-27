@@ -58,12 +58,11 @@ public class TankCtrlFragment extends Fragment {
             switch (v.getId()) {
               case R.id.tankPauseBtn://暂停按钮
             	  if(pause_resume_btn_state == 0){
-            		  pause_resume_btn_state = 1;
-            		  pause_resume_btn.setText("恢复");
             		  /*暂停*/
             		  int i, j;
             		  byte [] buf = new byte[24];
             		  int pauseMin = Integer.parseInt(((EditText)tankBaseLayout.findViewById(R.id.tank_pause_min)).getText().toString());
+
                 	  for(i=0; i<MAX_DEVICE_NUM; i++){
                 		  kTankDevice device = deviceList[i];
                 		  kTankDevice.KTANKCTRL ctrl;
@@ -90,8 +89,17 @@ public class TankCtrlFragment extends Fragment {
                 		  }
                 		  for(j=0; j<3; j++){
                 			  if(24 == ((MainActivity) getActivity()).ctrl_setting_save(device.devId, 
-                				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24))
+                				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24)){
+                				  
                 				  break;
+                			  }
+                		  }
+                		  if(j >= 3){
+                			  //失败
+                			  pause_resume_btn.setText("暂停(上次失败,重试)");
+                		  }else{
+                			  pause_resume_btn_state = 1;
+                    		  pause_resume_btn.setText("恢复");
                 		  }
                 	  }
             	  }else{
@@ -112,7 +120,14 @@ public class TankCtrlFragment extends Fragment {
                 				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24))
                 				  break;
                 		  }
-                		  
+                		  if(j >= 3){
+                			  //失败
+                			  pause_resume_btn.setText("恢复(上次失败,重试)");
+                		  }else{
+                			  pause_resume_btn_state = 0;
+                    		  pause_resume_btn.setText("暂停");
+                		  }
+
                 	  }
             	  }
             	  
