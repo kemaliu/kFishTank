@@ -21,7 +21,7 @@ public class kTankDevice {
 		public class KTANKCTRL_LED {
 			String name;
 			int[] hour = new int[24];
-			int temperature;
+			float temperature;
 			int fanPwm;
 			int pwm_now;
 		}
@@ -86,9 +86,11 @@ public class kTankDevice {
 			    //UINT8 fanPWM;               /* led temperature */
 			    //UINT8 pwm_now;              /* LED PWM */
 			    //unsigned char watt;         /* 最大功耗 */
-				led.temperature = info[1] < 0?info[1]+256:info[1];
-				led.fanPwm = info[2] < 0?info[2]+256:info[2];
-				led.pwm_now = info[3] < 0?info[3]+256:info[3];
+				int tmp = info[2] < 0?info[2]+256:info[2];
+				int tmp1 = info[3] < 0?info[3]+256:info[3];
+				led.temperature = ((float)(tmp1 * 256 + tmp))/16;
+				led.fanPwm = info[4] < 0?info[4]+256:info[4];
+				led.pwm_now = info[5] < 0?info[5]+256:info[5];
 			} else { // switch
 				swi.on_now = info[1];
 			}
