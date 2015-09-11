@@ -47,6 +47,17 @@ public class BLUETOOTH_CTRL {
 		msgHandler.sendMessage(m);
 	}
 
+    private void notifyActivity(int state, String[] str) {
+		Message m = new Message();
+		m.what = state;
+		if (str != null) {
+			Bundle bundle = new Bundle();
+			bundle.putStringArray("array", str);
+			m.setData(bundle);
+		}
+		msgHandler.sendMessage(m);
+	}
+
 	MainActivity mainActivity;
 
 	public BLUETOOTH_CTRL(MainActivity act,//主窗口句柄 
@@ -247,23 +258,27 @@ public class BLUETOOTH_CTRL {
 		// lstDevices.clear();
 		Object[] lstDevice = btAdapt.getBondedDevices().toArray();
 		int findMark = 0;
-		BluetoothDevice device = null;
+		BluetoothDevice device_found[] = new BluetoothDevice[10];
+		BluetoothDevice device;
+		BluetoothDevice tmp = null;
 		// search blue tooth device
 		for (int i = 0; i < lstDevice.length; i++) {
-			device = (BluetoothDevice) lstDevice[i];
+			tmp = (BluetoothDevice) lstDevice[i];
 			String nameStr = null;
-			nameStr = device.getName()// .substring(0, 6)
+			if(tmp.getName().length() < 6)
+				continue;
+			nameStr = tmp.getName().substring(0, 6)
 			;
-			if (0 != "kfish-2".compareTo(nameStr)) {
+			if (0 != "kfish-".compareTo(nameStr)) {
 				continue;
 			}
 			nameStr = null;
-			findMark = 1;
-			break;
+			device_found[findMark] = tmp;
+			findMark++;
 		}
-		if (findMark == 0 || device == null) {
+		if (findMark == 0) {
 			// found none, report error
-			notifyActivity(mainActivity.BT_STATE_LOG, "蓝牙连接KFISH失败");
+			notifyActivity(mainActivity.BT_STATE_LOG, "蓝牙连接KFISH失败，未找到kfish设备");
 			notifyActivity(mainActivity.BT_FATAL_ERROR);
 
 			// this.setTitle("discovering");
@@ -272,7 +287,28 @@ public class BLUETOOTH_CTRL {
 			/* btAdapt.startDiscovery(); */
 			return;
 		}
-
+		notifyActivity(mainActivity.BT_STATE_LOG, "找到"+ findMark + "个设备");
+		if(findMark == 1)
+			device = device_found[0];
+		else{
+			mainActivity.bt_devices_selectDone = 0;
+			String[] name_list = new String[findMark];
+			int i;
+			for(i=0; i<findMark; i++)
+				name_list[i] = device_found[i].getName();
+			mainActivity.bt_devices_selectDone = -1;
+			notifyActivity(mainActivity.BT_STATE_SELECT, name_list);
+			//等待用户选择
+			while(mainActivity.bt_devices_selectDone < 0){
+			    try {
+				Thread.sleep(1);
+			    } catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			    }
+			}
+			device = device_found[mainActivity.bt_devices_selectDone];
+		}
 		// try connect
 		if (0 != connect(device)) {
 			notifyActivity(mainActivity.BT_STATE_LOG, "程序将会在三秒内退出");
@@ -522,7 +558,7 @@ public class BLUETOOTH_CTRL {
 				String nameStr = null;
 				nameStr = device.getName();// .substring(0, 5)
 
-				if (0 != "kfish-2".compareTo(nameStr)) {
+				if (0 != "kfish-1".compareTo(nameStr)) {
 					return;
 				}
 				nameStr = null;

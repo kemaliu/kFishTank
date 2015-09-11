@@ -1,8 +1,12 @@
 package com.kemaliu.ktank;
 
+import com.example.fragmentdemo.R;
+
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 public class kTankDevice {
 	static final int TANK_DEV_LED = 0;
@@ -47,7 +51,7 @@ public class kTankDevice {
 		KTANKCTRL_SWITCH swi = null;
 		KTANKCTRL_LED led = null;
 		String name;
-
+		public LinearLayout ctrl_layout;  //在控制页面对应的layout
 		
 		public KTANKCTRL(byte[] info) {
 
@@ -72,6 +76,7 @@ public class kTankDevice {
 						led.hour[i] = (int) info[i] + 256;
 					}
 				}
+				
 			} else { // switch
 				for (i = 0; i < 24; i++) {
 					swi.hour[i] = info[i];
@@ -91,8 +96,23 @@ public class kTankDevice {
 				led.temperature = ((float)(tmp1 * 256 + tmp))/16;
 				led.fanPwm = info[4] < 0?info[4]+256:info[4];
 				led.pwm_now = info[5] < 0?info[5]+256:info[5];
+				if(this.ctrl_layout != null){
+					TextView status_text;
+                    status_text = (TextView)this.ctrl_layout.findViewById(R.id.ctrl_led_status);
+                    status_text.setText("状态： 温度"+this.led.temperature + ", 亮度" + 
+                    		this.led.pwm_now + ", 风扇"+this.led.fanPwm);
+				}
 			} else { // switch
-				swi.on_now = info[1];
+				swi.on_now = info[2];
+				if(this.ctrl_layout != null){
+					TextView status_text;
+                    status_text = (TextView)this.ctrl_layout.findViewById(R.id.ctrl_onoff_status);
+                    if(this.swi.on_now > 0)
+                    	status_text.setText("状态： 开");
+                    else
+                    	status_text.setText("状态： 关");
+
+				}
 			}
 		}
 

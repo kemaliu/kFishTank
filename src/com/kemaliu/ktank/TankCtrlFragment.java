@@ -72,7 +72,6 @@ public class TankCtrlFragment extends Fragment {
                 		  if(device == null)
                 			  continue;
                 		  
-                		  
                 		  for(j=0; j<24; j++)
                 			  buf[j] = 0;
                 		  
@@ -90,6 +89,8 @@ public class TankCtrlFragment extends Fragment {
                 				  
                 			  }
                 		  }
+                		  if(device.controller[0].controllerType == kTankDevice.TANK_DEV_LED)
+                			  continue;
                 		  for(j=0; j<3; j++){
                 			  if(24 == ((MainActivity) getActivity()).ctrl_setting_save(device.devId, 
                 				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24)){
@@ -118,6 +119,8 @@ public class TankCtrlFragment extends Fragment {
                 			  continue;
                 		  for(j=0; j<24; j++)
                 			  buf[j] = 0;
+                		  if(device.controller[0].controllerType == kTankDevice.TANK_DEV_LED)
+                			  continue;
                 		  for(j=0; j<3; j++){
                 			  if(24 == ((MainActivity) getActivity()).bluetooth_controller.remoteInfomationSave(device.devId, 
                 				  0, KTANK_CMD.KFISH_CMD_DEV_PAUSE, buf, 24))
@@ -154,7 +157,7 @@ public class TankCtrlFragment extends Fragment {
                     ctrl.name = newName;
 
                     ((TextView) ctrlLayout[popupDevId][popupCtrlId]
-                     .findViewById(R.id.ctrl_led_name))
+                     .findViewById(R.id.ctrl_name))
                       .setText(newName);
 
                     byte[] buf = new byte[24];
@@ -219,7 +222,7 @@ public class TankCtrlFragment extends Fragment {
             switch(arg0.getId()){
             	
             	case R.id.ctrl_led_status:
-		  /* 更新状态*/
+            	{ /* 更新状态*/
             		int retry;
             		int ctrlId;
             		byte[] info = new byte[24];
@@ -234,13 +237,38 @@ public class TankCtrlFragment extends Fragment {
         				if (24 == ((MainActivity) getActivity()).bluetooth_controller.remoteInfomationRequest(device.devId, ctrlId,
         						KTANK_CMD.KFISH_CMD_GET_CTRL_STATUS, info, 24)) {
 					    controller.updateLocalStatus(info);
-					    TextView status_text = (TextView)arg0.findViewById(R.id.ctrl_led_status);
+					    /*TextView status_text = (TextView)arg0.findViewById(R.id.ctrl_led_status);
 					    status_text.setText("状态： 温度"+controller.led.temperature + ", 亮度" + 
-					    		controller.led.pwm_now + ", 风扇"+controller.led.fanPwm);
+					    		controller.led.pwm_now + ", 风扇"+controller.led.fanPwm);*/
 					    break;
         				}
         			}
+            	}
 	            break;
+            	case R.id.ctrl_onoff_status:
+            	{ /* 更新状态*/
+                      		int retry;
+                      		int ctrlId;
+                      		byte[] info = new byte[24];
+                      		for(ctrlId=0; ctrlId< MAX_CTRL_NUM_OF_DEVICE; ctrlId++){
+                      			if(device.controller[ctrlId] == controller)
+                      				break;
+                      		}
+                      	    if(ctrlId >= MAX_CTRL_NUM_OF_DEVICE){
+                      	    	return;            	    	
+                      	    }
+                      		for (retry = 0; retry < 3; retry++) {
+                  				if (24 == ((MainActivity) getActivity()).bluetooth_controller.remoteInfomationRequest(device.devId, ctrlId,
+                  						KTANK_CMD.KFISH_CMD_GET_CTRL_STATUS, info, 24)) {
+          					    controller.updateLocalStatus(info);
+          					    /*TextView status_text = (TextView)arg0.findViewById(R.id.ctrl_led_status);
+          					    status_text.setText("状态： 温度"+controller.led.temperature + ", 亮度" + 
+          					    		controller.led.pwm_now + ", 风扇"+controller.led.fanPwm);*/
+          					    break;
+                  				}
+                  			}
+            	}
+          	         break;
             case R.id.ctrl_onoff_btn:
             	//this btn for switch row only
             	int i = 0, j = 0, found = 0;
@@ -291,6 +319,7 @@ public class TankCtrlFragment extends Fragment {
                   return;
                 /* 在页面中显示该列表 */
                 deviceLayout[i].setVisibility(View.VISIBLE);
+                 
                 TextView tv = (TextView) deviceLayout[i]
                               .findViewById(R.id.device_desc_text);
                 
@@ -299,29 +328,32 @@ public class TankCtrlFragment extends Fragment {
                 for (j = 0; j < device.getCtrlNum(); j++) {
 		    CTRL_LONGCLICK_LISTEN longClickListen = new CTRL_LONGCLICK_LISTEN(
 			deviceList[i], deviceList[i].controller[j]);
+		    CFG_BTN_LISTEN clickListen = new CFG_BTN_LISTEN(
+			deviceList[i], deviceList[i].controller[j]);
                     if (device.controller[j].controllerType == kTankDevice.TANK_DEV_LED) {
                         LinearLayout layout = ctrlLayout[i][j];
+                        device.controller[j].ctrl_layout = layout;
                         ctrlLists[i][j] = device.controller[j];
-                        tv = (TextView) layout.findViewById(R.id.ctrl_led_name);
+                        tv = (TextView) layout.findViewById(R.id.ctrl_name);
                         tv.setText(device.getCtrlName(j));
                         tv.setOnLongClickListener(longClickListen);
                         TextView status_text;
                         status_text = (TextView)layout.findViewById(R.id.ctrl_led_status);
                         status_text.setText("状态： 温度"+deviceList[i].controller[j].led.temperature + ", 亮度" + 
-                        deviceList[i].controller[j].led.pwm_now + ", 风扇"+deviceList[i].controller[j].led.fanPwm);
+					    deviceList[i].controller[j].led.pwm_now + ", 风扇"+deviceList[i].controller[j].led.fanPwm);
                         status_text.setClickable(true);
                         status_text.setLongClickable(true);
                         status_text.setOnLongClickListener(longClickListen);
-                        status_text.setOnClickListener(new CFG_BTN_LISTEN(
-                                deviceList[i], deviceList[i].controller[j]));
+                        status_text.setOnClickListener(clickListen);
                         layout.setVisibility(View.VISIBLE);                        
                     } else/* if (device.controller[j].controllerType == kTankDevice.TANK_DEV_ONOFF) */{
                         LinearLayout layout = ctrlLayout[i][j + 2];
                         ctrlLists[i][j + 2] = device.controller[j];
-                        tv = (TextView) layout.findViewById(R.id.ctrl_led_name);
+                        device.controller[j].ctrl_layout = layout;
+                        tv = (TextView) layout.findViewById(R.id.ctrl_name);
                         tv.setText(device.getCtrlName(j));
                         tv.setOnLongClickListener(longClickListen);
-                        layout.setVisibility(View.VISIBLE);
+                        
                         /*Button btn = (Button) layout
                                      .findViewById(R.id.ctrl_led_cfg_btn);
                         CFG_BTN_LISTEN listen = new CFG_BTN_LISTEN(deviceList[i], deviceList[i].controller[j]);
@@ -329,8 +361,23 @@ public class TankCtrlFragment extends Fragment {
                         ToggleButton t_btn = (ToggleButton) layout
                                 .findViewById(R.id.ctrl_onoff_btn);
                         t_btn.setChecked(device.controller[j].swi.on_now==0?false:true);
-                        
-                        
+			pause_value_list[i][j+2] = device.controller[j].swi.on_now;
+			
+			t_btn.setOnClickListener(clickListen);
+                        TextView status_text;
+                        status_text = (TextView)layout.findViewById(R.id.ctrl_onoff_status);
+                        if(deviceList[i].controller[j].swi.on_now > 0)
+                        	status_text.setText("状态： 开");
+                        else
+                        	status_text.setText("状态： 关");
+                        status_text.setClickable(true);
+                        status_text.setLongClickable(true);
+                        status_text.setOnLongClickListener(longClickListen);
+			status_text.setOnClickListener(clickListen);
+			// t_btn.setOnLongClickListener(longClickListen);
+			// t_btn.setOnClickListener(new CFG_BTN_LISTEN(
+			// 			     deviceList[i], deviceList[i].controller[j]));
+                        layout.setVisibility(View.VISIBLE);
                     	}
                 }
                 break;
@@ -356,18 +403,18 @@ public class TankCtrlFragment extends Fragment {
         @Override
           public boolean onLongClick(View v) {
 
-	    if(v.getId() == R.id.ctrl_led_status){
-		if (controller.controllerType == 0) {// led
-		    ((MainActivity) getActivity()).setTabSelection(4);
-		    //根据老的配置信息更新界面的显示信息
-		    ((MainActivity) getActivity()).LEDCfgFragment.updateLEDCfg(
-			device, controller, tankId);
-		} else {
-		    ((MainActivity) getActivity()).setTabSelection(5);
-		    ((MainActivity) getActivity()).SwitchCfgFragment
-		      .updateSwitchCfg(device, controller, tankId);
-		}
-		return true;
+	    if(v.getId() == R.id.ctrl_led_status || v.getId() == R.id.ctrl_onoff_status){
+			if (controller.controllerType == 0) {// led
+			    ((MainActivity) getActivity()).setTabSelection(4);
+			    //根据老的配置信息更新界面的显示信息
+			    ((MainActivity) getActivity()).LEDCfgFragment.updateLEDCfg(
+				device, controller, tankId);
+			} else {
+			    ((MainActivity) getActivity()).setTabSelection(5);
+			    ((MainActivity) getActivity()).SwitchCfgFragment
+			      .updateSwitchCfg(device, controller, tankId);
+			}
+			return true;
 	    }
 	    
             int i, j;

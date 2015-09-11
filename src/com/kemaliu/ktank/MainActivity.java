@@ -16,8 +16,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.DialogInterface;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 
@@ -79,6 +81,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private TextView settingText;
 	
 	/*蓝牙消息的几个类型*/
+	final int BT_STATE_SELECT = 0x1003;
 	final int BT_STATE_READY = 0x1010;
 
 	final int BT_STATE_LOG = 0x4000;
@@ -143,6 +146,11 @@ public class MainActivity extends Activity implements OnClickListener {
 			case BT_STATE_FORCE_QUIT:
 				finish();
 				break;
+			case BT_STATE_SELECT:
+				bd = msg.getData();
+			  bt_device_init(bd.getStringArray("array"));
+
+				
 			}
 			super.handleMessage(msg);
 		}
@@ -156,12 +164,33 @@ public class MainActivity extends Activity implements OnClickListener {
 
 	Thread backGroundThread;
 
+    public int bt_devices_selectDone = -1;
+	public void bt_device_init(String[] namelist)
+	{
+	    //private AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+	    AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+	    bt_devices_selectDone = -1;
+         builder.setIcon(R.drawable.ic_launcher);
+         builder.setTitle("选择一个设备");
+         //    指定下拉列表的显示数据
+         //final String[] cities = {"广州", "上海", "北京", "香港", "澳门"};
+         //    设置一个下拉的列表选择项
+         builder.setItems(namelist, new DialogInterface.OnClickListener()
+         {
+             @Override
+             public void onClick(DialogInterface dialog, int which)
+             {
+                 bt_devices_selectDone = which;
+             }
+         });
+         builder.show();
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		__params = new Parameters(MainActivity.this);
 		__param_map = __params.getPreferences();
-
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		enterWelcomPage();
 		bluetooth_controller = new BLUETOOTH_CTRL(this, background_msg_receiver);
